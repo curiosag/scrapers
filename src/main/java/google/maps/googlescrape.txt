@@ -1,0 +1,26 @@
+// liefert genau einen Zufallstreffer
+https://maps.googleapis.com/maps/api/place/findplacefromtext/json?input=Temple%20India&inputtype=textquery&fields=place_id,formatted_address,name,geometry&key=AIzaSyBV78ab8nLSZJgQ003HmjWIN84sMz3gwqo
+
+https://www.google.com/maps/search/pizza+seattle+wa/@47.5899492,-122.317352,12z/data=!3m1!4b1
+
+https://www.google.at/maps/@48.7173369,16.294517,21z
+
+https://www.google.at/maps/@25.2978704,83.0065732,19.5z/data=!3m1!4b1
+
+
+
+// auch nur 1 Ergebnis
+https://maps.googleapis.com/maps/api/place/findplacefromtext/json?input=Temple&inputtype=textquery&fields=place_id,formatted_address,name,geometry&locationbias=rectangle:25.2978704,83.0065732|25.2989704,83.0076732&key=AIzaSyBV78ab8nLSZJgQ003HmjWIN84sMz3gwqo
+
+// mehrere, alle Felder
+https://maps.googleapis.com/maps/api/place/nearbysearch/json?location=25.2978704,83.0065732&radius=50&type=hindu_temple&key=AIzaSyBV78ab8nLSZJgQ003HmjWIN84sMz3gwqo
+
+
+textsearch liefert mehrere, alle Felder, aber viel zu ungenau
+https://maps.googleapis.com/maps/api/place/textsearch/json?query=restaurants+in+Sydney&key=AIzaSyBV78ab8nLSZJgQ003HmjWIN84sMz3gwqo
+
+
+53.32056
+53.36556 ... 5km north
+00.04500 ... lat change
+
