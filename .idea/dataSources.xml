@@ -15,5 +15,11 @@
         <property name="yearIsDateType" value="false" />
       </driver-properties>
     </data-source>
+    <data-source source="LOCAL" name="postgres@172.17.0.2" uuid="c7585a83-9b30-4bb2-ae8b-0bb8dd61731b">
+      <driver-ref>postgresql</driver-ref>
+      <synchronize>true</synchronize>
+      <jdbc-driver>org.postgresql.Driver</jdbc-driver>
+      <jdbc-url>jdbc:postgresql://172.17.0.2:5432/postgres</jdbc-url>
+    </data-source>
   </component>
 </project>

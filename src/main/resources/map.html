@@ -4,7 +4,7 @@
     <title>Simple Map</title>
     <script src="https://polyfill.io/v3/polyfill.min.js?features=default"></script>
     <script
-            src="https://maps.googleapis.com/maps/api/js?key=AIzaSyC-9YPM9emNZ7KFRMZQuHpgV9LJGaBpSt0&callback=initMap&libraries=&v=weekly"
+            src="https://maps.googleapis.com/maps/api/js?key=<API-KEY>&callback=initMap&libraries=&v=weekly"
             defer
     ></script>
     <style type="text/css">
@@ -19,38 +19,38 @@
             padding: 0;
         }
     </style>
+
     <script>
+
         const polyCoords = [
-            [ ]
+            []
         ];
 
-     const locations = []
+        const locations = []
 
         let map;
 
-        const circles = {
-            
-        };
+        const circles = {};
 
         function initMap() {
             map = new google.maps.Map(document.getElementById("map"), {
-                center: {lat: 19.12, lng: 77.9},
-                zoomControl: true   ,
+                center: {lat: 12.9, lng: 78.6},
+                zoomControl: true,
                 scaleControl: true,
                 zoom: 10,
             });
 
             function displayCoordinates(pnt) {
-                      var coordsLabel = document.getElementById("tdCursor");
-                      var lat = pnt.lat();
-                      lat = lat.toFixed(4);
-                      var lng = pnt.lng();
-                      lng = lng.toFixed(4);
-                      coordsLabel.innerHTML = "Latitude: " + lat + "  Longitude: " + lng;
-                  }
+                var coordsLabel = document.getElementById("tdCursor");
+                var lat = pnt.lat();
+                lat = lat.toFixed(4);
+                var lng = pnt.lng();
+                lng = lng.toFixed(4);
+                coordsLabel.innerHTML = "Latitude: " + lat + "  Longitude: " + lng;
+            }
 
             google.maps.event.addListener(map, 'mousemove', function (event) {
-                 displayCoordinates(event.latLng);
+                displayCoordinates(event.latLng);
             });
 
             polyCoords.forEach(function (element, index) {
@@ -84,12 +84,14 @@
                     title: locations[i].name,
                 });
             }
+
+
         }
 
     </script>
 </head>
 <body>
 <div id="map"></div>
-<div id="tdCursor"/>
+<div id="tdCursor"></div>
 </body>
 </html>

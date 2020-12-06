@@ -1,26 +1,20 @@
-package google.maps;
+package google.maps.searchapi;
 
+import google.maps.Point;
 import org.junit.Test;
+import org.locationtech.jts.geom.Coordinate;
+import org.locationtech.jts.geom.GeometryFactory;
+import org.locationtech.jts.geom.Polygon;
 
-import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.List;
 
-import static google.maps.Nearbysearch.*;
+import static google.maps.searchapi.Circles.createCircleCenters;
+import static google.maps.searchapi.Nearbysearch.*;
 import static org.junit.Assert.*;
 
 @SuppressWarnings("OptionalGetWithoutIsPresent")
 public class NearbysearchTest {
-
-    private static class Point {
-        public final double lat;
-        public final double lon;
-
-        private Point(double lat, double lon) {
-            this.lat = lat;
-            this.lon = lon;
-        }
-    }
 
     @Test
     public void testGetPageToken() {
@@ -28,71 +22,39 @@ public class NearbysearchTest {
         assertFalse(getPageToken("bla").isPresent());
     }
 
-    private final static int rowLenght = 10;
-    private final static int columnLength = 4;
+    @Test
+    public void gepStuff() {
+        GeometryFactory geoFactory = new GeometryFactory();
+        Coordinate[] coordinates = new Coordinate[] {
+                new Coordinate(0, 0), new Coordinate(0, 20),
+                 new Coordinate(20, 20), new Coordinate(20, 0), new Coordinate(0, 0) };
+        Polygon geo = geoFactory.createPolygon(coordinates);
+
+        assertTrue(geo.contains(new org.locationtech.jts.geom.Point(new Coordinate(10, 10), geoFactory.getPrecisionModel(), geoFactory.getSRID())));
+        assertFalse(geo.contains(new org.locationtech.jts.geom.Point(new Coordinate(100, 10), geoFactory.getPrecisionModel(), geoFactory.getSRID())));
+    }
 
     @Test
-    public void someCircles() {
-        //starting from {lat: 19.12, lng: 77.9, radius: 5000} 100km east and 50km south
+    public void printCirclesForVisualization() {
+        //starting from {lat: 19.12, lng: 77.9} 100km east and 50km south
         double lat = 19.12;
         double lon = 77.9;
 
-        List<List<Point>> columns = new ArrayList<>();
-        List<Point> gapFillers = new ArrayList<>();
-        for (int i = 0; i < rowLenght; i++) {
-            columns.add(new ArrayList<>());
-        }
-
-        Point upperLeft = new Point(lat, lon);
-        fillRow(0, upperLeft, columns);
-        fillGaps(columns, gapFillers);
-
-        for (int i = 1; i < columnLength; i++) {
-            Point prev = columns.get(0).get(i - 1);
-            double llat = mvLat(prev.lat, -10000);
-            double llon = mvLon(prev.lon, llat, 0);
-            fillRow(i, new Point(llat, llon), columns);
-            if (i < columnLength - 1) {
-                fillGaps(columns, gapFillers);
-            }
-        }
-
+        List<List<Point>> rows = createCircleCenters(lat, lon, 10, 5);
         StringBuilder sb = new StringBuilder();
-        for (int i = 0; i < rowLenght; i++) {
-            for (int j = 0; j < columnLength; j++) {
-                Point p = columns.get(i).get(j);
-                addJsLine(sb, i, j, "", p);
+        for (int i = 0; i < rows.size(); i++) {
+            List<Point> row = rows.get(i);
+            for (int j = 0; j < row.size(); j++) {
+                Point p = row.get(j);
+                addJsLine(sb, i, j, p);
             }
-        }
-        for (int i = 0; i < gapFillers.size(); i++) {
-            addJsLine(sb, 0, i, "g", gapFillers.get(i));
         }
 
         System.out.println(sb.toString());
     }
 
-    private void fillGaps(List<List<Point>> columns, List<Point> gapFillers) {
-        for (int i = 0; i < columns.size() - 1; i++) {
-            List<Point> col = columns.get(i);
-            Point p = col.get(col.size() - 1);
-            double llat = mvLat(p.lat, -5000);
-            double llon = mvLon(p.lon, llat, 5000);
-            gapFillers.add(new Point(llat, llon));
-        }
-    }
-
-    private void addJsLine(StringBuilder sb, int i, int j, String suffix, Point p) {
-        sb.append(String.format("c%d_%d%s: {lat: %.5f, lng: %.5f, radius: 5000},\n", i, j, suffix, p.lat, p.lon));
-    }
-
-    private void fillRow(int rowId, Point first, List<List<Point>> columns) {
-        columns.get(0).add(first);
-        for (int i = 1; i < rowLenght; i++) {
-            Point prev = columns.get(i - 1).get(rowId);
-            double llat = mvLat(prev.lat, rowId);
-            double llon = mvLon(prev.lon, llat, 10000);
-            columns.get(i).add(new Point(llat, llon));
-        }
+    private void addJsLine(StringBuilder sb, int i, int j, Point p) {
+        sb.append(String.format("c%d_%d: {lat: %.5f, lng: %.5f, radius: 5000},\n", i, j, p.lat, p.lon));
     }
 
     @Test
