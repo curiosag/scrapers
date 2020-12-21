@@ -40,6 +40,7 @@ import java.nio.file.Paths;
 import java.util.*;
 import java.util.stream.Collectors;
 
+import static google.maps.Area.rectangle;
 import static google.maps.webview.GrazingDirection.LEFT_TO_RIGHT;
 import static google.maps.webview.GrazingDirection.RIGHT_TO_LEFT;
 
@@ -156,10 +157,7 @@ class Browser extends Region {
         return new Area(rectangle(corners.left, corners.right));
     }
 
-    private List<Point> rectangle(Point lu, Point rl) {
-        return List.of(new Point(lu.lat, lu.lon), new Point(lu.lat, rl.lon), new Point(rl.lat, rl.lon),
-                new Point(rl.lat, lu.lon), new Point(lu.lat, lu.lon));
-    }
+
 
     private void onUrlSeen(String url) {
         if (url.startsWith("/maps/preview/") || url.startsWith("/maps/rpc/vp?")) {

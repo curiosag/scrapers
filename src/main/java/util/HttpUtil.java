@@ -20,7 +20,7 @@ public final class HttpUtil {
 
     private static  WebDriver getDriver() {
         if (driver == null) {
-            System.setProperty("webdriver.chrome.driver", "/home/ssmertnig/dev/tool/chromedriver/74/chromedriver");
+            System.setProperty("webdriver.chrome.driver", "/home/ssm/dev/tool/chromedriver/74/chromedriver");
 
             ChromeOptions options = new ChromeOptions();
             options.addArguments("headless");

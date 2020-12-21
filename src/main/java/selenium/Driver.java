@@ -25,7 +25,7 @@ int[] a ={};
     }
 
     public static WebDriver createFirefoxDriver(String proxyUrl, String proxPort) {
-        System.setProperty("webdriver.gecko.driver", "/home/ssmertnig/dev/tool/chromedriver/geckodriver/geckodriver-v0.24.0-linux64/geckodriver");
+        System.setProperty("webdriver.gecko.driver", "/home/ssm/dev/tool/chromedriver/geckodriver/geckodriver-v0.24.0-linux64/geckodriver");
 
         FirefoxOptions options = new FirefoxOptions();
 
@@ -42,13 +42,13 @@ int[] a ={};
     }
 
     public static WebDriver createChromeDriver(String proxyUrl, String proxPort) {
-        System.setProperty("webdriver.chrome.driver", "/home/ssmertnig/dev/tool/chromedriver/74/chromedriver");
+        System.setProperty("webdriver.chrome.driver", "/home/ssm/dev/tool/chromedriver/74/chromedriver");
 
         ChromeOptions options = new ChromeOptions();
 
-        options.addExtensions(new File("/home/ssmertnig/dev/tool/chromedriver/extensions/tunnelbaervpn/extension_3_2_8_0.crx"));
-        options.addExtensions(new File("/home/ssmertnig/dev/tool/chromedriver/extensions/showip/extension_1_3_1_0.crx"));
-        options.addExtensions(new File("/home/ssmertnig/dev/tool/chromedriver/extensions/proxyswitcher/extension_2_5_20_0.crx"));
+        options.addExtensions(new File("/home/ssm/dev/tool/chromedriver/extensions/tunnelbaervpn/extension_3_2_8_0.crx"));
+        options.addExtensions(new File("/home/ssm/dev/tool/chromedriver/extensions/showip/extension_1_3_1_0.crx"));
+        options.addExtensions(new File("/home/ssm/dev/tool/chromedriver/extensions/proxyswitcher/extension_2_5_20_0.crx"));
 
         if (proxyUrl != null) {
             Proxy proxy = new Proxy();

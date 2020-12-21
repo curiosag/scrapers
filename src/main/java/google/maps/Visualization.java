@@ -10,37 +10,66 @@ import org.locationtech.jts.geom.GeometryFactory;
 import org.locationtech.jts.geom.Polygon;
 
 import java.io.*;
-import java.util.ArrayList;
 import java.util.Collections;
 import java.util.List;
 import java.util.stream.Collectors;
 import java.util.stream.IntStream;
 
+import static google.maps.Area.rectangle;
+
 public class Visualization {
-    private static final String pageFullName = "/home/ssmertnig/dev/repo/scrapers/src/main/resources/TiruResults.html";
+    private static final String pageFullName = "/home/ssm/dev/repo/scrapers/src/main/resources/SriLanka.html";
 
     public static void main(String[] args) throws IOException {
-        createCsv("/home/ssmertnig/temp/scrapemore/tiruvannamalai.csv");
+        createCsv("/home/ssm/temp/scrapemore/SriLanka.csv");
+        //createHtml();
     }
 
     private static void createHtml() throws IOException {
         Visualization viz = new Visualization();
         RegionsDao r = new RegionsDao();
         PlacesDao p = new PlacesDao();
-        List<List<Point>> area = r.getBoundaries("name2", "Tiruvannamalai");
+       // List<List<Point>> area = r.getBoundaries("name0", "Sri Lanka");
+
+        Polygon poly = asPolygon(new Area(rectangle(new Point(9.9, 79.7), new Point(5.8, 81.9))).getBoundary());
 
         try (FileWriter w = new FileWriter(pageFullName)) {
-            List<PlaceSearchResultItem> places = (List<PlaceSearchResultItem>) restrict(p.getPlaces(), "name2", "Tiruvannamalai");
-            String rendered = viz.getPage(places, Collections.emptyList(), area);
+            List<PlaceSearchResultItem> places = (List<PlaceSearchResultItem>) restrict(p.getPlaces(), poly);
+            String rendered = viz.getPage(places, Collections.emptyList(), Collections.emptyList());
             w.write(rendered);
         }
     }
 
+    private static Polygon getCountryBoundary(String countryName){
+        RegionsDao d = new RegionsDao();
+        return asPolygon(d.getStateBoundaries("name0", countryName));
+    }
+
+    private static Polygon asPolygon(List<Point> points){
+        GeometryFactory geoFactory = new GeometryFactory();
+        Coordinate[] coordinates = points.stream()
+                .map(p -> new Coordinate(p.lat, p.lon))
+                .toArray(Coordinate[]::new);
+        return geoFactory.createPolygon(coordinates);
+    }
+
+    private static Polygon getStateBoundary(String stateName){
+        RegionsDao d = new RegionsDao();
+
+        GeometryFactory geoFactory = new GeometryFactory();
+        Coordinate[] coordinates = d.getStateBoundaries("name2", stateName).stream()
+                .map(p -> new Coordinate(p.lat, p.lon))
+                .toArray(Coordinate[]::new);
+        return geoFactory.createPolygon(coordinates);
+    }
+
+
     private static void createCsv(String csvFileName) throws IOException {
         PlacesDao p = new PlacesDao();
+        Polygon poly = asPolygon(new Area(rectangle(new Point(9.9, 79.7), new Point(5.8, 81.9))).getBoundary());
 
         try (FileWriter w = new FileWriter(csvFileName)) {
-            List<PlaceSearchResultItem> places = (List<PlaceSearchResultItem>) restrict(p.getPlaces(), "name2", "Tiruvannamalai");
+            List<PlaceSearchResultItem> places = (List<PlaceSearchResultItem>) restrict(p.getPlaces(), poly);
             places.forEach(i -> {
                 try {
                     w.write(ResultFileExtractor.getCsv(i));
@@ -51,19 +80,10 @@ public class Visualization {
         }
     }
 
-    private static String strip(String part) {
-        return part.replace("\"", "");
-    }
-
-    public static List restrict(List<? extends Locatable> points, String regionNameField, String regionName) {
+    public static List restrict(List<? extends Locatable> points, Polygon geo) {
         RegionsDao d = new RegionsDao();
 
         GeometryFactory geoFactory = new GeometryFactory();
-        Coordinate[] coordinates = d.getStateBoundaries(regionNameField, regionName).stream()
-                .map(p -> new Coordinate(p.lat, p.lon))
-                .toArray(Coordinate[]::new);
-        Polygon geo = geoFactory.createPolygon(coordinates);
-
         return points.stream()
                 .filter(p -> geo.contains(new org.locationtech.jts.geom.Point(new Coordinate(p.getLatitude(), p.getLongitude()), geoFactory.getPrecisionModel(), geoFactory.getSRID())))
                 .collect(Collectors.toList());
@@ -99,7 +119,7 @@ public class Visualization {
                 <title>Simple Map</title>
                 <script src="https://polyfill.io/v3/polyfill.min.js?features=default"></script>
                 <script
-                        src="https://maps.googleapis.com/maps/api/js?key=AIzaSyC-9YPM9emNZ7KFRMZQuHpgV9LJGaBpSt0&callback=initMap&libraries=&v=weekly"
+                        src="https://maps.googleapis.com/maps/api/js?key=API-KEY&callback=initMap&libraries=&v=weekly"
                         defer
                 ></script>
                 <style type="text/css">

@@ -1,8 +1,12 @@
     /*
-    * sudo apt-get install postgresql-client
-    * docker run --name gis -e POSTGRES_PASSWORD=<pwd> -d postgis/postgis
-    *
-    * docker exec -it my-postgres(gis) bash
+     
+     run maps scaraper with runHeadless.sh, see file for description 
+
+     random notes: 
+
+     sudo apt-get install postgresql-client
+     docker run --name gis -e POSTGRES_PASSWORD=<pwd> -d postgis/postgis
+
 
 
       psql -h 172.17.0.2 -p 5432 -U postgres -W

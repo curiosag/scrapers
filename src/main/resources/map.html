@@ -4,7 +4,7 @@
     <title>Simple Map</title>
     <script src="https://polyfill.io/v3/polyfill.min.js?features=default"></script>
     <script
-            src="https://maps.googleapis.com/maps/api/js?key=<API-KEY>&callback=initMap&libraries=&v=weekly"
+            src="https://maps.googleapis.com/maps/api/js?key=API-KEY&callback=initMap&libraries=&v=weekly"
             defer
     ></script>
     <style type="text/css">
@@ -28,9 +28,9 @@
 
         const locations = []
 
-        let map;
-
         const circles = {};
+
+        let map;
 
         function initMap() {
             map = new google.maps.Map(document.getElementById("map"), {

@@ -7,6 +7,11 @@ import java.util.List;
 import static google.maps.responseparser.Node.nonTerminal;
 import static google.maps.responseparser.SymType.*;
 
+/**
+ * useless redundant response parser. the data is json, one big plain nested array
+ * Node.getValue is useful, though, to navigage the nested arrays
+ *
+ * */
 public class ResponseParser {
 
     private final String content;

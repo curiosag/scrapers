@@ -19,7 +19,7 @@ public class ResultFileExtractor {
     public final static String resultFilePath = "./scraped/responses";
 
     public static void main(String[] args) throws SQLException {
-        extractFromCsv( "/home/ssmertnig/temp/scrapemore/responsesUniq.csv", "/home/ssmertnig/temp/scrapemore/responsesUniq.sql", ResultFileExtractor::getSql);
+        extractFromCsv( "/home/ssm/dev/data/temples/SriLanka2_2.csv", "/home/ssm/dev/data/temples/SriLanka2_2.sql", ResultFileExtractor::getSql);
     }
 
     private static void extractFromCsv(String csvInputPath, String outputFileName, Function<PlaceSearchResultItem, List<String>> outputGenerator) {

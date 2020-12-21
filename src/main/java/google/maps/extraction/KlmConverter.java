@@ -5,8 +5,8 @@ import java.util.Optional;
 
 public class KlmConverter {
 
-    private final static String fileIn = "/home/ssmertnig/dev/data/temples/Longitude_Graticules_and_World_Countries_Boundaries.kml";
-    private final static String fileOut = "/home/ssmertnig/dev/data/temples/Longitude_Graticules_and_World_Countries_Boundaries.sql";
+    private final static String fileIn = "/home/ssm/dev/data/temples/Longitude_Graticules_and_World_Countries_Boundaries.kml";
+    private final static String fileOut = "/home/ssm/dev/data/temples/Longitude_Graticules_and_World_Countries_Boundaries.sql";
 
     private final static String tagName0 = "<SimpleData name=\"CNTRY_NAME\">";
     private final static String tagName1 = "<SimpleData name=\"NAME_1\">";

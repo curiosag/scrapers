@@ -35,7 +35,7 @@ public class ScholarScraper {
         try {
             List<String> consider = Arrays.asList(titles);
             scrape(title -> consider.indexOf(title) >= 0);
-            writeCitations("/home/ssmertnig/Documents/citations.csv");
+            writeCitations("/home/ssm/Documents/citations.csv");
         } finally {
             driver.close();
         }

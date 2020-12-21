@@ -24,6 +24,11 @@ public class Area {
         return southernMost;
     }
 
+    public static List<Point> rectangle(Point lu, Point rl) {
+        return List.of(new Point(lu.lat, lu.lon), new Point(lu.lat, rl.lon), new Point(rl.lat, rl.lon),
+                new Point(rl.lat, lu.lon), new Point(lu.lat, lu.lon));
+    }
+
     public Area(List<Point> boundaries) {
         this.boundary = boundaries;
     }

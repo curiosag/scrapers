@@ -15,7 +15,7 @@ import static google.maps.searchapi.Circles.getCircleCenters;
 
 public class Nearbysearch {
 
-    private final static String inputPath = "/home/ssmertnig/dev/data/temples/scraped/lanka/";
+    private final static String inputPath = "/home/ssm/dev/data/temples/scraped/lanka/";
 
     private static final String fileNamePattern = "%.7f_%.7f__%d.json";
 
