@@ -1,24 +1,16 @@
     /*
+    different scrapers for
+
+     google maps using the public html maps front end. resource intensive, slow.
+
+     Built on JavaFX's WebView browser, simulates scroll and click on a selected are
+     and sniffs out the background communication. No convenience built in whatsoever
+     except that cooridinates for the are to be scraped can be passed as command line parameters
+     (see runHeadless.sh) Entry class is google.maps.webview.Launcher
      
      run maps scaraper with runHeadless.sh, see file for description 
 
-     random notes: 
+     google scholar
+     tmdn
 
-     sudo apt-get install postgresql-client
-     docker run --name gis -e POSTGRES_PASSWORD=<pwd> -d postgis/postgis
-
-
-
-      psql -h 172.17.0.2 -p 5432 -U postgres -W
-     
-      \l .. list dbs
-      \dt .. list tables in db
-      \c <database_name> switch to db
-      \d <table_name> describe table
-      \? available commands
-      SELECT version();
-
-      for outside connection find out IP of postgres on docker: docker inspect <Container-ID>
-
-      geometries use SRIDs -> Spatial Reference Identifier, defaults to 4326 WGS 84 long lat (World Geodetic System 1984)
-    * */
+  * */
