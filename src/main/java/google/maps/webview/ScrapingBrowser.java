@@ -26,7 +26,6 @@ import javafx.scene.layout.Region;
 import javafx.scene.robot.Robot;
 import javafx.scene.web.WebEngine;
 import javafx.scene.web.WebView;
-import util.Tuple;
 
 import javax.imageio.ImageIO;
 import java.awt.image.BufferedImage;
@@ -36,15 +35,25 @@ import java.net.CookieHandler;
 import java.net.CookieManager;
 import java.net.CookiePolicy;
 import java.nio.file.Files;
+import java.nio.file.Path;
 import java.nio.file.Paths;
-import java.util.*;
+import java.util.ArrayDeque;
+import java.util.List;
+import java.util.TimerTask;
+import java.util.concurrent.atomic.AtomicBoolean;
+import java.util.function.Consumer;
 import java.util.stream.Collectors;
 
-import static google.maps.Area.rectangle;
 import static google.maps.webview.GrazingDirection.LEFT_TO_RIGHT;
 import static google.maps.webview.GrazingDirection.RIGHT_TO_LEFT;
+import static google.maps.webview.Log.log;
 
-class Browser extends Region {
+class ScrapingBrowser extends Region {
+    private final static int waitTimeToResponse = 3000;
+
+    public AtomicBoolean cancelled = new AtomicBoolean();
+    Consumer<Point> onCoordinateSeen;
+
     private final static String markedImagePath = "./scraped/markedImages/";
     private final static String mapScreenshotPath = "./scraped/mapCapture.png";
     private final static String templatePath = "./om.png";
@@ -65,17 +74,20 @@ class Browser extends Region {
     private AreaExceeded areaExceeded = AreaExceeded.NO;
 
     File templateImage = setupFileStuff();
-    private final Timer timer = new Timer("mapops", true);
+    private final ConditionalTimer timer = new ConditionalTimer(() -> !cancelled.get(), "mapops", true);
     private final static boolean clickEmptyAreaToElicitCoordinates = false;
 
     private File setupFileStuff() {
-        try {
-            System.out.println("Setting up directories in " + System.getProperty("user.dir"));
-            Files.createDirectories(Paths.get(markedImagePath));
-            Files.createDirectories(Paths.get(ResultFileExtractor.resultFilePath));
-        } catch (IOException e) {
-            throw new RuntimeException(e);
-        }
+        Path pMarkedImage = Paths.get(markedImagePath);
+        Path pResultFiles = Paths.get(ResultFileExtractor.resultFilePath);
+        if (!Files.exists(pResultFiles))
+            try {
+                System.out.println("Setting up directories in " + System.getProperty("user.dir"));
+                Files.createDirectories(pMarkedImage);
+                Files.createDirectories(pResultFiles);
+            } catch (IOException e) {
+                throw new RuntimeException(e);
+            }
 
         File f = new File(templatePath);
         if (!f.exists()) {
@@ -84,8 +96,9 @@ class Browser extends Region {
         return f;
     }
 
-    public Browser(List<String> parameters) {
-        System.out.println("parameters received: " + parameters);
+    public ScrapingBrowser(boolean autorun, Area searchArea, Point startAt, Consumer<Point> onCoordinateSeen) {
+        this.searchArea = searchArea;
+        this.onCoordinateSeen = onCoordinateSeen;
 
         webView.setOnMouseMoved(this::onMouseMove);
         webView.setOnKeyPressed(this::onKeyPressed);
@@ -111,59 +124,31 @@ class Browser extends Region {
 
         setupJsConsoleListener();
 
-        String url;
-        Optional<Tuple<Point>> boundaries = getBoundaries(parameters);
-        if (boundaries.isPresent()) {
-            searchArea = getSearchArea(boundaries.get());
-            url = getStartUrl(boundaries.get().left);
-            Point lu = boundaries.get().left;
-            Point rl = boundaries.get().right;
-            System.out.printf("scraping (%.7f/%.7f)/(%.7f/%.7f)\n", lu.lat, lu.lon, rl.lat, rl.lon);
-        } else {
-            searchArea = new Area(rectangle(new Point(12.9, 78.6), new Point(11.9, 79.7)));
-            url = "https://www.google.com/maps/@12.8607531,79.4603154,18.5z";
-        }
-
-        webEngine.load(url);
-
-        maybeAutorun(parameters.contains("autorun"));
+        webEngine.load(getStartUrl(startAt));
+        maybeAutorun(autorun);
     }
 
     private void maybeAutorun(boolean autorun) {
-        if(autorun)
-        {
+        if (autorun) {
             System.out.println("Starting to graze in 10 secs");
             schedule(this::startGrazing, 10000);
         }
     }
 
     private String getStartUrl(Point p) {
-        // 0.001 ... so the map is centered inside the boundaries
-        return String.format("https://www.google.com/maps/@%.7f,%.7f,18.5z", p.lat - 0.001, p.lon + 0.001);
+        var result = String.format("https://www.google.com/maps/@%.7f,%.7f,18.5z", p.lat, p.lon);
+        log(result);
+        return result;
     }
-
-    private Optional<Tuple<Point>> getBoundaries(List<String> params) {
-        if (params.size() > 0) {
-            if (params.size() < 4) {
-                throw new IllegalArgumentException("invalid number of params");
-            }
-            List<Double> c = params.subList(0, 4).stream().map(Double::valueOf).collect(Collectors.toList());
-            return Optional.of(Tuple.of(new Point(c.get(0), c.get(1)), new Point(c.get(2), c.get(3))));
-        }
-        return Optional.empty();
-    }
-
-    private Area getSearchArea(Tuple<Point> corners) {
-        return new Area(rectangle(corners.left, corners.right));
-    }
-
-
 
     private void onUrlSeen(String url) {
+        if (cancelled.get())
+            return;
         if (url.startsWith("/maps/preview/") || url.startsWith("/maps/rpc/vp?")) {
             CoordExtractor.extract(url).ifPresent(p -> {
                 if (searchArea.contains(p)) {
-                    System.out.println("Coordinates " + p.toString());
+                    onCoordinateSeen.accept(p);
+                    //System.out.println("Coordinates " + p.toString());
                     areaExceeded = AreaExceeded.NO;
                 } else {
                     areaExceeded = grazingDirection == LEFT_TO_RIGHT ? AreaExceeded.RIGHT : AreaExceeded.LEFT;
@@ -176,7 +161,10 @@ class Browser extends Region {
         }
     }
 
+    private int bodies = 0;
+
     public void onResponse(String headers, String body) {
+        log(String.format("body %d seen: %s", ++bodies, body.replace('\n', ' ').substring(0, Math.min(body.length(), 40))));
         resultCsvExtractor.onResponse(body);
     }
 
@@ -208,16 +196,16 @@ class Browser extends Region {
     private final ImageLocations imageLocations = new ImageLocations(null /*markedImagePath*/);
 
     private void graze(List<Point> locations) {
-        if (!isDone()) {
+        if (!isDone() && !cancelled.get()) {
             Runnable continueWith = () ->
                     moveMapHorizontally(() -> klickNcheckAreaExceeded(this::gatherLocationsAndGraze, this::moveSouth));
-            new GrazingTimerTask(new ArrayDeque<>(locations), this::mouseMove, 500, continueWith, timer).run();
+            new GrazingTimerTask(new ArrayDeque<>(locations), this::mouseMove, waitTimeToResponse, continueWith, timer).run();
         }
     }
 
     void klickNcheckAreaExceeded(Runnable continuedOnOk, Runnable continueOnFail) {
         Image image = saveScreenshotToFile(mapScreenshotPath);
-        if(clickEmptyAreaToElicitCoordinates) {
+        if (clickEmptyAreaToElicitCoordinates) {
             EmptyAreaDetector.getEmptyKlickableLocation(image).ifPresent(l -> Platform.runLater(() -> {
                 MapScreenMeasures measures = new MapScreenMeasures(webView);
                 Point p = toScreenCoordinates(l, measures);
@@ -235,13 +223,14 @@ class Browser extends Region {
         }, 500);
     }
 
+    @SuppressWarnings("SimplifiableConditionalExpression")
     private void gatherLocationsAndGraze() {
+        if (cancelled.get())
+            return;
         saveScreenshotToFile(mapScreenshotPath);
         List<Match> locations = imageLocations.getTemplateLocations(templateImage, new File(mapScreenshotPath));
 
         MapScreenMeasures measures = new MapScreenMeasures(webView);
-        // watch mouse coordinates in bash using
-        // watch -n 0.1 "xdotool getmouselocation"
 
         // only half of the map can be grazed, because the other half may still be loading
         List<Point> grazableLocations = locations.stream()
@@ -253,25 +242,23 @@ class Browser extends Region {
     }
 
     private void moveMapHorizontally(Runnable next) {
+        if (cancelled.get())
+            return;
         MapDisplayLocation l = new MapDisplayLocation(webView);
-        float y = l.y + 10;
+        float y = l.y + 450; // avoid the hidden map elements
+        float x = l.x + 10; // make sure that MoveTimerTask x and startx are initially equal
         float centerX = l.x + (l.w - 10) / 2;
+        int delay = 10;
         switch (grazingDirection) {
-            case LEFT_TO_RIGHT -> {
-                new MoveTimerTask(centerX - 50, centerX - 50, l.x + 10, -10, y, y, y, 0, 10, robot, next, timer).run();
-            }
-            case RIGHT_TO_LEFT -> {
-                new MoveTimerTask(l.x + 10, l.x + 10, centerX - 50, 10, y, y, y, 0, 10, robot, next, timer).run();
-            }
+            case LEFT_TO_RIGHT -> new MoveTimerTask(centerX - 50, centerX - 50, l.x + 10, -10, y, y, y, 0, delay, robot, next, timer).run();
+            case RIGHT_TO_LEFT -> new MoveTimerTask(x, x, centerX - 50, 10, y, y, y, 0, delay, robot, next, timer).run();
         }
     }
 
     private void reenterSearchArea() {
         // areaExceeded is set in onUrlSeen
         switch (areaExceeded) {
-            case RIGHT, LEFT -> {
-                moveMapHorizontally(() -> klickNcheckAreaExceeded(this::gatherLocationsAndGraze, this::reenterSearchArea));
-            }
+            case RIGHT, LEFT -> moveMapHorizontally(() -> klickNcheckAreaExceeded(this::gatherLocationsAndGraze, this::reenterSearchArea));
             case SOUTH -> {
             }
             case NO -> gatherLocationsAndGraze();
@@ -279,12 +266,15 @@ class Browser extends Region {
     }
 
     private void moveSouth() {
+        if (cancelled.get())
+            return;
         MapDisplayLocation l = new MapDisplayLocation(webView);
 
-        Runnable whatsNext = () -> schedule(this::turnAround, 1500);
-        float startY = l.y + l.h - 50;
-        float x = l.x + 20;
-        new MoveTimerTask(x, x, x, 0, startY, startY, l.y + 10, -10, 100, robot, whatsNext, timer).run();
+        Runnable thenTurnAround = () -> schedule(this::turnAround, 1500);
+        float startY = l.y + l.h - 50; // make sure that MoveTimerTask y and starty are initially equal
+        float x = l.x + 500; // avoid the hidden map elements
+        int delay = 10;
+        new MoveTimerTask(x, x, x, 0, startY, startY, l.y + 10, -10, delay, robot, thenTurnAround, timer).run();
     }
 
     private void turnAround() {
@@ -308,9 +298,7 @@ class Browser extends Region {
     }
 
     public void mouseMove(float screenX, float screenY) {
-        Platform.runLater(() -> {
-            robot.mouseMove(screenX, screenY);
-        });
+        Platform.runLater(() -> robot.mouseMove(screenX, screenY));
     }
 
     public void mouseClick(float screenX, float screenY) {
@@ -335,6 +323,7 @@ class Browser extends Region {
         layoutInArea(toolBar, 0, h - tbHeight, w, tbHeight, 0, HPos.CENTER, VPos.CENTER);
     }
 
+    @SuppressWarnings("SameParameterValue")
     private Image saveScreenshotToFile(String capturedImagePath) {
         //SnapshotParameters params = new SnapshotParameters();
         //params.setViewport(new Rectangle2D(mapOffset, 0, (w - mapOffset) / 2, h));
@@ -350,6 +339,9 @@ class Browser extends Region {
     }
 
     private void schedule(Runnable r, long delay) {
+        if (cancelled.get())
+            return;
+
         timer.schedule(new TimerTask() {
             @Override
             public void run() {
@@ -359,7 +351,7 @@ class Browser extends Region {
     }
 
     private boolean isDone() {
-        return areaExceeded == AreaExceeded.SOUTH;
+        return cancelled.get() || areaExceeded == AreaExceeded.SOUTH;
     }
 
     private Point toScreenCoordinates(Match m, MapScreenMeasures measures) {

@@ -5,3 +5,4 @@ CREATE TABLE searches
     lon double precision not null,
     done integer default 0
 );
+

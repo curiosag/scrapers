@@ -10,9 +10,9 @@ public class DistrictLoaderTest {
 
     @Test
     public void testScanFor() {
-        assertEquals(Optional.of("hi"), KlmConverter.scanFor("<hi>", "lala<hi>hi<ho>"));
-        assertEquals(Optional.empty(), KlmConverter.scanFor("<hi>", null));
-        assertEquals(Optional.empty(), KlmConverter.scanFor("<hi>", ""));
-        assertEquals(Optional.empty(), KlmConverter.scanFor("<hi>", "lala<ho>hi<ho>"));
+        assertEquals(Optional.of("hi"), KlmXmlConverter.scanFor("<hi>", "lala<hi>hi<ho>"));
+        assertEquals(Optional.empty(), KlmXmlConverter.scanFor("<hi>", null));
+        assertEquals(Optional.empty(), KlmXmlConverter.scanFor("<hi>", ""));
+        assertEquals(Optional.empty(), KlmXmlConverter.scanFor("<hi>", "lala<ho>hi<ho>"));
     }
 }

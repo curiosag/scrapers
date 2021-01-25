@@ -1,12 +1,16 @@
 package google.maps.webview;
 
+import com.google.common.base.Charsets;
 import javafx.beans.value.ObservableValue;
 import javafx.concurrent.Worker;
 import javafx.scene.web.WebEngine;
 import netscape.javascript.JSObject;
 
+import java.nio.charset.Charset;
 import java.util.function.BiConsumer;
 import java.util.function.Consumer;
+
+import static google.maps.webview.Log.log;
 
 public class JsBridge {
 
@@ -26,8 +30,8 @@ public class JsBridge {
                         win.setMember("jsbridge", jsbridge);
                         webEngine.executeScript(xmlrequestStartInterceptor);
                         webEngine.executeScript(xmlrequestDoneInterceptor);
-                        cssTweaks.styleIds(webEngine, "vasquette", "minimap", "fineprint");
-                        cssTweaks.styleClasses(webEngine, "app-viewcard-strip", "widget-pane-toggle-button-container");
+                        cssTweaks.styleIds(webEngine, "vasquette", "minimap", "fineprint", "searchbox");
+                        cssTweaks.styleClasses(webEngine, "section-layout","searchbox-icon", "section-cardbox", "app-viewcard-strip", "widget-pane-toggle-button-container", "section-promo-card-text-container");
                     }
                 });
     }

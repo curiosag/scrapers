@@ -3,7 +3,7 @@ package google.maps.extraction;
 import java.io.*;
 import java.util.Optional;
 
-public class KlmConverter {
+public class KlmXmlConverter {
 
     private final static String fileIn = "/home/ssm/dev/data/temples/Longitude_Graticules_and_World_Countries_Boundaries.kml";
     private final static String fileOut = "/home/ssm/dev/data/temples/Longitude_Graticules_and_World_Countries_Boundaries.sql";

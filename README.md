@@ -13,4 +13,7 @@
      google scholar
      tmdn
 
+     watch mouse coordinates in bash using
+     watch -n 0.1 "xdotool getmouselocation"
+
   * */

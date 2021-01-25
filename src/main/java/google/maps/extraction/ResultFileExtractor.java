@@ -19,7 +19,7 @@ public class ResultFileExtractor {
     public final static String resultFilePath = "./scraped/responses";
 
     public static void main(String[] args) throws SQLException {
-        extractFromCsv( "/home/ssm/dev/data/temples/SriLanka2_2.csv", "/home/ssm/dev/data/temples/SriLanka2_2.sql", ResultFileExtractor::getSql);
+        extractFromCsv( "/home/ssmertnig/dev/data/temples/todo/baliU.csv", "/home/ssmertnig/dev/data/temples/todo/bali.sql", ResultFileExtractor::getSql);
     }
 
     private static void extractFromCsv(String csvInputPath, String outputFileName, Function<PlaceSearchResultItem, List<String>> outputGenerator) {
@@ -80,14 +80,13 @@ public class ResultFileExtractor {
                 i.vicinity, i.lat, i.lon);
     }
 
-    private static final String insertPlaceGeom = "insert into places_geo (place_id, geom) values ('%s',ST_GeomFromText('POINT(%.14f %.14f)')) ON CONFLICT (place_id) DO NOTHING;\n";
-    private static final String insertPlace = "insert into places (place_id, name, plus_compound_code, global_code, vicinity) values ('%s','%s','%s','%s','%s') ON CONFLICT (place_id) DO NOTHING;\n";
+    private static final String insertPlace = "insert into places_scraped (id, place_id, name, plus_compound_code, global_code, vicinity, geom) values ('%s', '%s','%s','%s','%s','%s', ST_GeomFromText('POINT(%.14f %.14f)')) ON CONFLICT (place_id) DO NOTHING;\n";
 
+    static int maxId = 13255;
     public static List<String> getSql(PlaceSearchResultItem i) {
         List<String> result = new ArrayList<>();
-        result.add(String.format(insertPlaceGeom, i.placeId, i.lat, i.lon));
-        result.add(String.format(insertPlace, i.placeId, quote(i.name),
-                i.plus_compound_code, quote(i.adress), quote(i.vicinity)));
+        result.add(String.format(insertPlace, ++maxId, i.placeId, quote(i.name),
+                i.plus_compound_code, quote(i.adress), quote(i.vicinity), i.lat, i.lon));
         return result;
     }
 
@@ -161,6 +160,8 @@ public class ResultFileExtractor {
 
             String[] parts;
             while ((parts = csvReader.readNext()) != null) {
+                if(parts.length == 0)
+                    continue;
                 String placeid = parts[0];
                 String name = parts[1];
                 String plusCode = parts[2];

@@ -21,6 +21,7 @@ public class ResultCsvExtractor {
     }
 
     public synchronized void onResponse(String response) {
+
         if (response.contains("[\"hindu_temple\"]")) {
             ResponseExtractor.extract(response).ifPresent(b -> {
                 writeToFile(response, numberResponses);

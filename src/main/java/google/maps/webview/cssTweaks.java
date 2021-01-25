@@ -28,10 +28,14 @@ public class cssTweaks {
 
     public static void styleClasses(WebEngine e, String... classes) {
         String script = """
-                  var elements = document.getElementsByClassName("%s");
-                  for (var i = 0, max = elements.length; i < max; i++) {
-                     elements[i].style.display = "none";
-                  }
+                  function bla(){
+                      var elements = document.getElementsByClassName("%s");
+                      for (var i = 0, max = elements.length; i < max; i++) {
+                         elements[i].style.display = "none";
+                      }
+                  } 
+                setTimeout(bla, 8000);
+                setTimeout(bla, 16000);
                 """;
         for (String s : classes) {
             System.out.println(String.format(script, s));
@@ -41,11 +45,15 @@ public class cssTweaks {
 
     public static void styleIds(WebEngine e, String... ids) {
         String script = """
-                var e = document.getElementById("%s");
-                if(e)
-                {
-                    e.style.display = "none";
-                }               
+                function bla(){
+                    var e = document.getElementById("%s");
+                    if(e)
+                    {
+                        e.style.display = "none";
+                    }              
+                } 
+                setTimeout(bla, 8000);
+                setTimeout(bla, 16000);
                 """;
         for (String s : ids) {
             e.executeScript(String.format(script, s));

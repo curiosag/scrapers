@@ -18,20 +18,18 @@ import java.util.stream.IntStream;
 import static google.maps.Area.rectangle;
 
 public class Visualization {
-    private static final String pageFullName = "/home/ssm/dev/repo/scrapers/src/main/resources/SriLanka.html";
-
     public static void main(String[] args) throws IOException {
-        createCsv("/home/ssm/temp/scrapemore/SriLanka.csv");
-        //createHtml();
+        RegionsDao r = new RegionsDao();
+// List<List<Point>> area = r.getBoundaries("name0", "Sri Lanka");
+
+        Polygon p = asPolygon(new Area(rectangle(new Point(-2, 100), new Point(-10, 125))).getBoundary());
+        createCsv("/home/ssmertnig/temp/scrapemore/Bali.csv", p);
+        createHtml("/home/ssmertnig/dev/repo/scrapers/src/main/resources/Bali.html", p);
     }
 
-    private static void createHtml() throws IOException {
+    private static void createHtml(String pageFullName, Polygon poly) throws IOException {
         Visualization viz = new Visualization();
-        RegionsDao r = new RegionsDao();
         PlacesDao p = new PlacesDao();
-       // List<List<Point>> area = r.getBoundaries("name0", "Sri Lanka");
-
-        Polygon poly = asPolygon(new Area(rectangle(new Point(9.9, 79.7), new Point(5.8, 81.9))).getBoundary());
 
         try (FileWriter w = new FileWriter(pageFullName)) {
             List<PlaceSearchResultItem> places = (List<PlaceSearchResultItem>) restrict(p.getPlaces(), poly);
@@ -63,10 +61,8 @@ public class Visualization {
         return geoFactory.createPolygon(coordinates);
     }
 
-
-    private static void createCsv(String csvFileName) throws IOException {
+    private static void createCsv(String csvFileName, Polygon poly) throws IOException {
         PlacesDao p = new PlacesDao();
-        Polygon poly = asPolygon(new Area(rectangle(new Point(9.9, 79.7), new Point(5.8, 81.9))).getBoundary());
 
         try (FileWriter w = new FileWriter(csvFileName)) {
             List<PlaceSearchResultItem> places = (List<PlaceSearchResultItem>) restrict(p.getPlaces(), poly);
@@ -104,7 +100,7 @@ public class Visualization {
                 .collect(Collectors.joining(",\n"));
 
         String p = places.stream()
-                .map(i -> String.format("{ lat: %.10f, lng: %.10f, name:\"%s\"}", i.getLatitude(), i.getLongitude(), String.format("%s, %s, %s, %s", i.name, i.plus_compound_code, i.vicinity, i.placeId)))
+                .map(i -> String.format("{ lat: %.10f, lng: %.10f, name:\"%s\"}", i.getLatitude(), i.getLongitude(), String.format("%s, %s, %s, %s %.5f %.5f", i.name, i.plus_compound_code, i.vicinity, i.placeId, i.lat, i.lon)))
                 .collect(Collectors.joining(",\n"));
 
         return page.replace("circleDataHere!", circles)

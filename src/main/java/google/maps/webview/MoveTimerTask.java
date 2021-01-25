@@ -20,12 +20,12 @@ public class MoveTimerTask extends TimerTask {
     private final long delay;
     private final Robot robot;
     private final Runnable onMoved;
-    private final Timer timer;
+    private final ConditionalTimer timer;
 
     /*
     Can't be done with a pre-calculated list like in GrazingTimerTask because the movement of the map is irregular
     * */
-    public MoveTimerTask(float x, float startX, float endX, float deltaX, float y, float startY, float endY, float deltaY, long delay, Robot robot, Runnable onMoved, Timer timer) {
+    public MoveTimerTask(float x, float startX, float endX, float deltaX, float y, float startY, float endY, float deltaY, long delay, Robot robot, Runnable onMoved, ConditionalTimer timer) {
         this.x = x;
         this.y = y;
         this.startX = startX;

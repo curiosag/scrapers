@@ -9,14 +9,14 @@ import google.maps.Point;
 
 public class CoordExtractor {
 
-    private final static String regex = ".*?!2d([0-9.]*)!3d([0-9.]*)";
+    private final static String regex = ".*?!2d(-*[0-9.]*)!3d(-*[0-9.]*)";
 
     /* for longitude/latitude in the form of ...!2d76.9987!3d23.344455!...
      .*?        ... anything, non greedy
      !2d        ... "!2d"
-     ([0-9.]*)  ... a float: digit or dot, multiple times
+     (-*[0-9.]*)  ... a float: maybe negative, digit or dot, multiple times
      !3d        ... "!3d"
-     ([0-9.]*)  ... another float
+     (-*[0-9.]*)  ... another float
     * */
     private final static Pattern pattern = Pattern.compile(regex);
 

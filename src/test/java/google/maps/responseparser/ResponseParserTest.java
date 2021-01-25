@@ -20,7 +20,7 @@ public class ResponseParserTest {
 
     @Test
     public void nowReally() throws IOException {
-        String path = "/home/ssm/dev/data/temples/scraped/responses/0.txt";
+        String path = "/home/ssmertnig/dev/data/temples/scraped/responses/0.txt";
         String value = Files.readString(Paths.get(path));
         String v = new ResponseParser(value).parse().toString();
         v = null;

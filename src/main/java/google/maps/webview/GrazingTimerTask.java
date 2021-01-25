@@ -12,9 +12,9 @@ public class GrazingTimerTask extends TimerTask {
     private final long delay;
     private final Runnable onGrazed;
     private final Deque<Point> locations;
-    private final Timer timer;
+    private final ConditionalTimer timer;
 
-    public GrazingTimerTask(Deque<Point> locations, BiConsumer<Float, Float> touch, long delay, Runnable onGrazed, Timer timer) {
+    public GrazingTimerTask(Deque<Point> locations, BiConsumer<Float, Float> touch, long delay, Runnable onGrazed, ConditionalTimer timer) {
         this.touch = touch;
         this.delay = delay;
         this.onGrazed = onGrazed;

@@ -16,8 +16,8 @@ public class PlacesDao {
     private final Connection connection = createConnection(Const.connectionUrl, true);
 
     public List<PlaceSearchResultItem> getPlaces() {
-        String query = "select places.place_id, name, plus_compound_code, global_code, vicinity, ST_AsText(places_geo.geom) as geom\n" +
-                "from places join places_geo on places_geo.place_id = places.place_id";
+        String query = "select place_id, name, plus_compound_code, global_code, vicinity, ST_AsText(geom) as geom\n" +
+                "from places_scraped";
 
         List<PlaceSearchResultItem> result = new ArrayList<>();
         try {
