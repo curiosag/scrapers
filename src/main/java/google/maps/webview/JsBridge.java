@@ -6,6 +6,10 @@ import javafx.concurrent.Worker;
 import javafx.scene.web.WebEngine;
 import netscape.javascript.JSObject;
 
+import java.io.BufferedReader;
+import java.io.IOException;
+import java.io.InputStream;
+import java.io.InputStreamReader;
 import java.nio.charset.Charset;
 import java.util.function.BiConsumer;
 import java.util.function.Consumer;
@@ -67,13 +71,27 @@ public class JsBridge {
                         const origOpen = XMLHttpRequest.prototype.open;
                         XMLHttpRequest.prototype.open = function() {
                                 this.addEventListener('load', function() {
-                                    if(g_initial_loading_finished) {
                                         jsbridge.onResponse(this.getAllResponseHeaders(), this.responseText);
-                                    }
                                 });
                            origOpen.apply(this, arguments);
                         };
                     }))();
                     """;
+
+    public static String stream2String(InputStream s){
+        InputStreamReader isReader = new InputStreamReader(s);
+        BufferedReader reader = new BufferedReader(isReader);
+        StringBuffer sb = new StringBuffer();
+        String str;
+        while(true){
+            try {
+                if (!((str = reader.readLine())!= null)) break;
+            } catch (IOException e) {
+                throw new IllegalStateException();
+            }
+            sb.append(str);
+        }
+        return sb.toString();
+    }
 
 }

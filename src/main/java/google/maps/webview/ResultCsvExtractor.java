@@ -25,7 +25,7 @@ public class ResultCsvExtractor {
         if (response.contains("[\"hindu_temple\"]")) {
             ResponseExtractor.extract(response).ifPresent(b -> {
                 writeToFile(response, numberResponses);
-                writeToFile(getCsv(b));
+                appenToFile(getCsv(b));
                 incResponses();
             });
         }
@@ -36,7 +36,7 @@ public class ResultCsvExtractor {
         numberResponses++;
     }
 
-    private void writeToFile(String s) {
+    private void appenToFile(String s) {
         try (FileWriter w = new FileWriter(path + ".csv", StandardCharsets.UTF_8, true)) {
             w.write(s);
         } catch (IOException e) {

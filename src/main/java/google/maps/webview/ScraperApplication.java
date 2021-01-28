@@ -26,7 +26,7 @@ import static google.maps.webview.Log.log;
 public class ScraperApplication extends Application {
     private static final int mb = 1024 * 1024;
     private static final int maxMb = 1024 * 2;
-    ScrapingBrowser scrapingBrowser;
+    ScrapeBrowser scrapeBrowser;
     Point currentPoint;
     Timer timer = new Timer();
     boolean autorun;
@@ -46,8 +46,8 @@ public class ScraperApplication extends Application {
     private void resetStage(Stage stage) {
         log("reset stage");
 
-        if (scrapingBrowser != null) {
-            scrapingBrowser.cancelled.set(true);
+        if (scrapeBrowser != null) {
+            scrapeBrowser.cancelled.set(true);
             stage.close();
         }
 
@@ -56,8 +56,8 @@ public class ScraperApplication extends Application {
         searchArea = searchArea == null ? getSearchArea(boundaries) : searchArea;
         currentPoint = currentPoint == null ? getCurrentPoint(boundaries): currentPoint;
 
-        scrapingBrowser = new ScrapingBrowser(autorun, searchArea, currentPoint, this::onPointSeen);
-        stage.setScene(new Scene(scrapingBrowser, 1910, 900, Color.web("#666970")));
+        scrapeBrowser = new ScrapeBrowser(autorun, searchArea, currentPoint, this::onPointSeen);
+        stage.setScene(new Scene(scrapeBrowser, 1910, 900, Color.web("#666970")));
 
         timer.schedule(new TimerTask() {
             @Override
@@ -67,7 +67,7 @@ public class ScraperApplication extends Application {
                     Platform.runLater(() -> resetStage(stage));
                 }
             }
-        }, scrapingBrowser == null ? 0 : 300000);
+        }, scrapeBrowser == null ? 0 : 300000);
         stage.show();
     }
 
