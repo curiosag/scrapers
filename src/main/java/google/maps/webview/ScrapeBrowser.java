@@ -154,7 +154,6 @@ class ScrapeBrowser extends Region {
             CoordExtractor.extract(url).ifPresent(p -> {
                 if (searchArea.contains(p)) {
                     onCoordinateSeen.accept(p);
-                    //System.out.println("Coordinates " + p.toString());
                     areaExceeded = AreaExceeded.NO;
                 } else {
                     areaExceeded = grazingDirection == LEFT_TO_RIGHT ? AreaExceeded.RIGHT : AreaExceeded.LEFT;

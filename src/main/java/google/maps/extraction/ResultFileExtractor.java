@@ -119,40 +119,6 @@ public class ResultFileExtractor {
         }
     }
 
-    private static List<PlaceSearchResultItem> extractFromAPIJson(String json) {
-        List<PlaceSearchResultItem> result = new ArrayList<>();
-        ObjectMapper mapper = new ObjectMapper();
-        try {
-            JsonNode nodes = mapper.readTree(json).get("results");
-            if (nodes == null) {
-                return Collections.emptyList();
-            } else {
-                nodes.forEach(n -> result.add(extractNode(n)));
-            }
-        } catch (IOException e) {
-            throw new RuntimeException(e);
-        }
-        return result;
-    }
-
-    private static PlaceSearchResultItem extractNode(JsonNode n) {
-        String placeId = n.get("place_id").textValue();
-        String name = n.get("name").textValue();
-        JsonNode geo = n.get("geometry").get("location");
-        double lat = geo.get("lat").doubleValue();
-        double lng = geo.get("lng").doubleValue();
-        JsonNode plus_code = n.get("plus_code");
-        String plus_compound_code = plus_code == null ? "" : getText(plus_code, "compound_code");
-        String global_code = plus_code == null ? "" : getText(plus_code, "global_code");
-        String vicinity = getText(n, "vicinity");
-        return new PlaceSearchResultItem(placeId, lat, lng, name, plus_compound_code, global_code, vicinity);
-    }
-
-    private static String getText(JsonNode n, String key) {
-        JsonNode la = n.get(key);
-        return la == null ? "" : la.asText();
-    }
-
     static List<PlaceSearchResultItem> fromCsv(String inputPath) {
         List<PlaceSearchResultItem> result = new ArrayList<>();
         try (FileReader filereader = new FileReader(inputPath)) {
