@@ -17,7 +17,7 @@ import java.util.stream.Collectors;
 
 import static boofcv.struct.image.ImageType.SB_F32;
 
-public class ImageLocations {
+public class ImageTemplateMatching {
 
     private static final double matchThreshold = -6;
     private final String pathMarkedResultImages;
@@ -26,7 +26,7 @@ public class ImageLocations {
     /*
      * @param pathMarkedResultImages set to nun-null value to store images with detected matches highlighted
      * */
-    public ImageLocations(String pathMarkedResultImages) {
+    public ImageTemplateMatching(String pathMarkedResultImages) {
         this.pathMarkedResultImages = pathMarkedResultImages;
         if (pathMarkedResultImages != null) {
             String[] dir = new File(pathMarkedResultImages).list();

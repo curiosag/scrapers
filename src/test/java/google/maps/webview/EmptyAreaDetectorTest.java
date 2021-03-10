@@ -33,10 +33,10 @@ public class EmptyAreaDetectorTest {
     }
 
     private void drawTestArea(PixelReader r, int x, int y) {
-        String outputPath = "/home/ssm/temp/testArea.png";
-        GrayF32 image = UtilImageIO.loadImage("/home/ssm/dev/repo/scrapers/src/test/resources/mapFragment.png", GrayF32.class);
-
+        String outputPath = "/home/ssmertnig/temp/testArea.png";
+        GrayF32 image = UtilImageIO.loadImage("/home/ssmertnig/dev/repo/scrapers/src/test/resources/mapFragment.png", GrayF32.class);
         BufferedImage output = new BufferedImage(image.width, image.height, BufferedImage.TYPE_INT_BGR);
+
         ConvertBufferedImage.convertTo(image, output);
 
         List<Point> area = EmptyAreaDetector.getAreaChecked(x, y);

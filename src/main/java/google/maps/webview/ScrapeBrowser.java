@@ -51,10 +51,10 @@ import static google.maps.webview.GrazingDirection.RIGHT_TO_LEFT;
 import static google.maps.webview.Log.log;
 
 class ScrapeBrowser extends Region {
-    private final static int waitTimeToResponse = 3000;
 
     public AtomicBoolean cancelled = new AtomicBoolean();
     Consumer<Point> onCoordinateSeen;
+    private final RequestSequencer sequencer = new RequestSequencer();
 
     private final static String markedImagePath = "./scraped/markedImages/";
     private final static String mapScreenshotPath = "./scraped/mapCapture.png";
@@ -98,7 +98,7 @@ class ScrapeBrowser extends Region {
         return f;
     }
 
-    public ScrapeBrowser(boolean autorun, Area searchArea, Point startAt, Consumer<Point> onCoordinateSeen) {
+    public ScrapeBrowser(boolean autorun, Area searchArea, Point startAt, float zoom, Consumer<Point> onCoordinateSeen) {
         this.searchArea = searchArea;
         this.onCoordinateSeen = onCoordinateSeen;
 
@@ -126,7 +126,7 @@ class ScrapeBrowser extends Region {
 
         setupJsConsoleListener();
 
-        webEngine.load(getStartUrl(startAt));
+        webEngine.load(getStartUrl(startAt, zoom));
         maybeAutorun(autorun);
     }
 
@@ -137,21 +137,25 @@ class ScrapeBrowser extends Region {
         }
     }
 
-    private String getStartUrl(Point p) {
-        var result = String.format("https://www.google.com/maps/@%.7f,%.7f,18.5z", p.lat, p.lon);
+    private String getStartUrl(Point p, float zoom) {
+        var result = String.format("https://www.google.com/maps/@%.7f,%.7f,%.2fz", p.lat, p.lon, zoom);
         log(result);
         return result;
     }
 
     private final String logfile = "./grazelog.txt";
     private int urls = 0;
+
     private void onUrlSeen(String url) {
         if (cancelled.get())
             return;
-        log("URLSEEN " + url);
-        appenToFile(logfile, String.format("\n***URLSEEN %d\n %s \nURLSEEN***", ++urls, url));
+        log(String.format("\n***URLSEEN %d\n %s \nURLSEEN***", ++urls, url));
         if (url.startsWith("/maps/preview/") || url.startsWith("/maps/rpc/vp?")) {
             CoordExtractor.extract(url).ifPresent(p -> {
+                log("URLSEEN " + url);
+                if (url.startsWith("/maps/preview/place")) {
+                    sequencer.onRequest(url);
+                }
                 if (searchArea.contains(p)) {
                     onCoordinateSeen.accept(p);
                     areaExceeded = AreaExceeded.NO;
@@ -169,9 +173,10 @@ class ScrapeBrowser extends Region {
     private int responses = 0;
 
     public void onResponse(String urlPlusHeaders, String body) {
-        log(String.format("body %d seen: %s", ++responses, body));
-
-        appenToFile(logfile, String.format("\n***RESPONSE %d\n HEADERS %s\n BODY %s \nRESPONSE***", ++responses, urlPlusHeaders, body));
+        if (body.contains("[\"hindu_temple\"]")) {
+            sequencer.onResponse(body);
+        }
+        //appendToFile(logfile, String.format("\n***RESPONSE %d\n HEADERS %s\n BODY %s \nRESPONSE***", ++responses, urlPlusHeaders, body));
         resultCsvExtractor.onResponse(body);
     }
 
@@ -200,13 +205,15 @@ class ScrapeBrowser extends Region {
         });
     }
 
-    private final ImageLocations imageLocations = new ImageLocations(null /*markedImagePath*/);
+    private final ImageTemplateMatching imageTemplateMatching = new ImageTemplateMatching(null /*markedImagePath*/);
 
     private void graze(List<Point> locations) {
         if (!isDone() && !cancelled.get()) {
+            ScreenCoordinatesMap sc = new ScreenCoordinatesMap(webView);
             Runnable continueWith = () ->
                     moveMapHorizontally(() -> klickNcheckAreaExceeded(this::gatherLocationsAndGraze, this::moveSouth));
-            new GrazingTimerTask(new ArrayDeque<>(locations), this::mouseMove, waitTimeToResponse, continueWith, timer).run();
+
+            new GrazingTimerTask(sc.windowX, sc.windowY, new ArrayDeque<>(locations), this::mouseMove, 500, continueWith, timer, sequencer).run();
         }
     }
 
@@ -235,30 +242,35 @@ class ScrapeBrowser extends Region {
         if (cancelled.get())
             return;
         saveScreenshotToFile(mapScreenshotPath);
-        List<Match> locations = imageLocations.getTemplateLocations(templateImage, new File(mapScreenshotPath));
+        List<Match> locations = imageTemplateMatching.getTemplateLocations(templateImage, new File(mapScreenshotPath));
 
         MapScreenMeasures measures = new MapScreenMeasures(webView);
 
         // only half of the map can be grazed, because the other half may still be loading
-        List<Point> grazableLocations = locations.stream()
+        List<Point> screenLocations = locations.stream()
                 .filter(l -> grazingDirection == LEFT_TO_RIGHT ? l.x < measures.mapCenterX : l.x >= measures.mapCenterX)
+                .filter(l -> l.x >= ScreenCoordinatesMap.offsetX)
                 .map(l -> toScreenCoordinates(l, measures))
                 .collect(Collectors.toList());
 
-        graze(grazableLocations);
+        graze(screenLocations);
     }
 
     private void moveMapHorizontally(Runnable next) {
         if (cancelled.get())
             return;
-        MapDisplayLocation l = new MapDisplayLocation(webView);
+        ScreenCoordinatesMap l = new ScreenCoordinatesMap(webView);
         float y = l.y + 450; // avoid the hidden map elements
-        float x = l.x + 10; // make sure that MoveTimerTask x and startx are initially equal
-        float centerX = l.x + (l.w - 10) / 2;
+        float centerX = l.x + l.w / 2;
+        // create some overlap between moved map sections in order to catch markers that otherwise may be precisely at the border line
+        float overlapOffset = grazingDirection == LEFT_TO_RIGHT ? -15 : 15;
+        float startX = centerX + overlapOffset; // make sure that MoveTimerTask params x and startx are initially equal
         int delay = 10;
         switch (grazingDirection) {
-            case LEFT_TO_RIGHT -> new MoveTimerTask(centerX - 50, centerX - 50, l.x + 10, -10, y, y, y, 0, delay, robot, next, timer).run();
-            case RIGHT_TO_LEFT -> new MoveTimerTask(x, x, centerX - 50, 10, y, y, y, 0, delay, robot, next, timer).run();
+            // search window moves right, map moves left, mouse moves left
+            case LEFT_TO_RIGHT -> new MoveTimerTask(startX, startX, l.x, -10, y, y, y, 0, delay, robot, next, timer).run();
+            // search window moves left, map moves right, mouse moves right
+            case RIGHT_TO_LEFT -> new MoveTimerTask(startX, startX, centerX + l.w / 2, 10, y, y, y, 0, delay, robot, next, timer).run();
         }
     }
 
@@ -275,13 +287,14 @@ class ScrapeBrowser extends Region {
     private void moveSouth() {
         if (cancelled.get())
             return;
-        MapDisplayLocation l = new MapDisplayLocation(webView);
+        ScreenCoordinatesMap l = new ScreenCoordinatesMap(webView);
 
         Runnable thenTurnAround = () -> schedule(this::turnAround, 1500);
-        float startY = l.y + l.h - 50; // make sure that MoveTimerTask y and starty are initially equal
+        float overlapOffset = -15;
+        float startY = l.y + l.h + overlapOffset; // make sure that MoveTimerTask y and starty are initially equal
         float x = l.x + 500; // avoid the hidden map elements
-        int delay = 10;
-        new MoveTimerTask(x, x, x, 0, startY, startY, l.y + 10, -10, delay, robot, thenTurnAround, timer).run();
+        int delay = 30;
+        new MoveTimerTask(x, x, x, 0, startY, startY, l.y, -10, delay, robot, thenTurnAround, timer).run();
     }
 
     private void turnAround() {
@@ -369,7 +382,7 @@ class ScrapeBrowser extends Region {
         return new Point(p.lat + measures.screenOffsetX, p.lon + measures.screenOffsetY);
     }
 
-    private void appenToFile(String filename, String s) {
+    private void appendToFile(String filename, String s) {
         try (FileWriter w = new FileWriter(filename, StandardCharsets.UTF_8, true)) {
             w.write(s);
         } catch (IOException e) {

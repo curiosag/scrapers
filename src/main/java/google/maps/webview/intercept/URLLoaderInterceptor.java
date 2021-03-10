@@ -10,6 +10,7 @@ import java.util.function.Consumer;
 
 public class URLLoaderInterceptor {
 
+    public static Consumer<URLConnection> onSendRequest;
     public static Consumer<URLConnection> onDidReceiveResponse;
     public static Consumer<ByteBuffer> onDidReceiveData;
     public static Runnable onFinishedLoading;
@@ -19,6 +20,14 @@ public class URLLoaderInterceptor {
         if (onFinishedLoading == null)
             throw new IllegalStateException();
         onFinishedLoading.run();
+
+        c.call();
+    }
+
+    public static void sendRequest(@SuperCall Callable<Void> c, @AllArguments Object[] args) throws Exception {
+        if (onDidReceiveData == null || args.length < 1 || !(args[0] instanceof URLConnection))
+            throw new IllegalStateException();
+        onSendRequest.accept((URLConnection) args[0]);
 
         c.call();
     }

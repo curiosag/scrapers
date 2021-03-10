@@ -14,6 +14,7 @@ import net.bytebuddy.pool.TypePool;
 import java.io.FileWriter;
 import java.io.IOException;
 import java.lang.instrument.Instrumentation;
+import java.net.URLConnection;
 import java.nio.ByteBuffer;
 import java.nio.charset.StandardCharsets;
 import java.util.List;
@@ -46,20 +47,27 @@ public class Launcher {
         TypeDescription URLLoaderInterceptorType = interceptorTypepool.describe("google.maps.webview.intercept.URLLoaderInterceptor").resolve();
 
         new ByteBuddy().rebase(fooType, ClassFileLocator.ForClassLoader.of(interceptorClassLoader))
+                .method(named("sendRequest")).intercept(MethodDelegation.to(URLLoaderInterceptorType))
                 .method(named("didReceiveData")).intercept(MethodDelegation.to(URLLoaderInterceptorType))
                 .method(named("didFinishLoading")).intercept(MethodDelegation.to(URLLoaderInterceptorType))
                 .method(named("didReceiveResponse")).intercept(MethodDelegation.to(URLLoaderInterceptorType))
+
+
                 .make()
                 .load(urlloaderClassLoader, ClassReloadingStrategy.of(instrumentation));
 
+        URLLoaderInterceptor.onSendRequest = (c) -> {
+            //onUrl(c);
+        };
+
         URLLoaderInterceptor.onDidReceiveData = (data) -> {
-            collector.onData(data);
+            //collector.onData(data);
         };
         URLLoaderInterceptor.onFinishedLoading = () -> {
-            collector.onComplete();
+            //collector.onComplete();
         };
         URLLoaderInterceptor.onDidReceiveResponse = (c) -> {
-            collector.onResponse(c);
+            //collector.onResponse(c);
         };
     }
 
@@ -73,6 +81,15 @@ public class Launcher {
                 if (startsWith(r.data, "XHR1"))
                     w.write(body);
             }
+        } catch (IOException e) {
+            throw new RuntimeException(e);
+        }
+    }
+
+    private synchronized static void onUrl(URLConnection c) {
+        try (FileWriter w = new FileWriter("urls.txt", StandardCharsets.UTF_8, true)) {
+            String url = c.getURL().toString();
+            w.write(url + '\n');
         } catch (IOException e) {
             throw new RuntimeException(e);
         }

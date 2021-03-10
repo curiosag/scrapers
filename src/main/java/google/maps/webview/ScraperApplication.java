@@ -54,9 +54,9 @@ public class ScraperApplication extends Application {
         List<String> parameters = getParameters().getRaw();
         Optional<Tuple<Point>> boundaries = getBoundaries(parameters);
         searchArea = searchArea == null ? getSearchArea(boundaries) : searchArea;
-        currentPoint = currentPoint == null ? getCurrentPoint(boundaries): currentPoint;
+        currentPoint = currentPoint == null ? getCurrentPoint(boundaries) : currentPoint;
 
-        scrapeBrowser = new ScrapeBrowser(autorun, searchArea, currentPoint, this::onPointSeen);
+        scrapeBrowser = new ScrapeBrowser(autorun, searchArea, currentPoint, 15f, this::onPointSeen);
         stage.setScene(new Scene(scrapeBrowser, 1910, 900, Color.web("#666970")));
 
         timer.schedule(new TimerTask() {
@@ -73,7 +73,7 @@ public class ScraperApplication extends Application {
 
     private boolean exceedsMemBoundary() {
         Runtime instance = Runtime.getRuntime();
-        if ( Math.toIntExact(instance.totalMemory() / (1024 * 1024)) > maxMb){
+        if (Math.toIntExact(instance.totalMemory() / (1024 * 1024)) > maxMb) {
             log("***** Heap utilization statistics [MB] *****\n");
             log("Total Memory: " + instance.totalMemory() / mb);
             log("Free Memory: " + instance.freeMemory() / mb);
@@ -97,7 +97,7 @@ public class ScraperApplication extends Application {
         Point cornerLeftUpper = searchArea.get().left;
 
         // 0.0005 ... so the map is centered inside the boundaries
-        var result =  new Point(cornerLeftUpper.lat - 0.0005, cornerLeftUpper.lon + 0.0005);
+        var result = new Point(cornerLeftUpper.lat - 0.0005, cornerLeftUpper.lon + 0.0005);
         log(String.format("starting at (%.7f/%.7f)\n", result.lat, result.lon));
         return result;
     }

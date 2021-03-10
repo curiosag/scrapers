@@ -81,7 +81,7 @@
                 <executions>
                     <execution>
                         <id>make-assembly</id>
-                        <phase>paaackage</phase>
+                        <phase>paackage</phase>
                         <goals>
                             <goal>single</goal>
                         </goals>
