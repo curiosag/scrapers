@@ -55,8 +55,9 @@ public class ScraperApplication extends Application {
         Optional<Tuple<Point>> boundaries = getBoundaries(parameters);
         searchArea = searchArea == null ? getSearchArea(boundaries) : searchArea;
         currentPoint = currentPoint == null ? getCurrentPoint(boundaries) : currentPoint;
+        float zoom = getZoom(parameters);
 
-        scrapeBrowser = new ScrapeBrowser(autorun, searchArea, currentPoint, 15f, this::onPointSeen);
+        scrapeBrowser = new ScrapeBrowser(autorun, searchArea, currentPoint, zoom, this::onPointSeen);
         stage.setScene(new Scene(scrapeBrowser, 1910, 900, Color.web("#666970")));
 
         timer.schedule(new TimerTask() {
@@ -126,6 +127,12 @@ public class ScraperApplication extends Application {
         return Optional.empty();
     }
 
+    private float getZoom(List<String> params) {
+        if (params.size() < 5) {
+            throw new IllegalArgumentException("invalid number of params");
+        }
+        return Float.parseFloat(params.get(4));
+    }
 
     @SuppressWarnings("unused")
     private void setUpLogger() {

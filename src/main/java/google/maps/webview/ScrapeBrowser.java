@@ -51,10 +51,10 @@ import static google.maps.webview.GrazingDirection.RIGHT_TO_LEFT;
 import static google.maps.webview.Log.log;
 
 class ScrapeBrowser extends Region {
+    final JsBridge jsbridge;
 
     public AtomicBoolean cancelled = new AtomicBoolean();
     Consumer<Point> onCoordinateSeen;
-    private final RequestSequencer sequencer = new RequestSequencer();
 
     private final static String markedImagePath = "./scraped/markedImages/";
     private final static String mapScreenshotPath = "./scraped/mapCapture.png";
@@ -67,9 +67,7 @@ class ScrapeBrowser extends Region {
     final TextField coordinateDisplay = new TextField("hu");
     final Button move = new Button("go");
 
-    final JsBridge jsbridge;
     final Robot robot = new Robot();
-    final ResultCsvExtractor resultCsvExtractor = new ResultCsvExtractor();
 
     private final Area searchArea;
     private GrazingDirection grazingDirection = LEFT_TO_RIGHT;
@@ -107,8 +105,6 @@ class ScrapeBrowser extends Region {
 
         move.setOnAction(this::onMoveButtonPressed);
 
-        jsbridge = new JsBridge(webEngine, this::onUrlSeen, this::onResponse);
-
         coordinateDisplay.setPrefWidth(400);
 
         toolBar = new HBox();
@@ -128,6 +124,9 @@ class ScrapeBrowser extends Region {
 
         webEngine.load(getStartUrl(startAt, zoom));
         maybeAutorun(autorun);
+
+        jsbridge = new JsBridge(webEngine, this::onUrlSeen, (hu, ha) -> {
+        });
     }
 
     private void maybeAutorun(boolean autorun) {
@@ -149,13 +148,8 @@ class ScrapeBrowser extends Region {
     private void onUrlSeen(String url) {
         if (cancelled.get())
             return;
-        log(String.format("\n***URLSEEN %d\n %s \nURLSEEN***", ++urls, url));
         if (url.startsWith("/maps/preview/") || url.startsWith("/maps/rpc/vp?")) {
             CoordExtractor.extract(url).ifPresent(p -> {
-                log("URLSEEN " + url);
-                if (url.startsWith("/maps/preview/place")) {
-                    sequencer.onRequest(url);
-                }
                 if (searchArea.contains(p)) {
                     onCoordinateSeen.accept(p);
                     areaExceeded = AreaExceeded.NO;
@@ -168,16 +162,6 @@ class ScrapeBrowser extends Region {
                 }
             });
         }
-    }
-
-    private int responses = 0;
-
-    public void onResponse(String urlPlusHeaders, String body) {
-        if (body.contains("[\"hindu_temple\"]")) {
-            sequencer.onResponse(body);
-        }
-        //appendToFile(logfile, String.format("\n***RESPONSE %d\n HEADERS %s\n BODY %s \nRESPONSE***", ++responses, urlPlusHeaders, body));
-        resultCsvExtractor.onResponse(body);
     }
 
     private void onKeyPressed(KeyEvent keyEvent) {
@@ -213,7 +197,7 @@ class ScrapeBrowser extends Region {
             Runnable continueWith = () ->
                     moveMapHorizontally(() -> klickNcheckAreaExceeded(this::gatherLocationsAndGraze, this::moveSouth));
 
-            new GrazingTimerTask(sc.windowX, sc.windowY, new ArrayDeque<>(locations), this::mouseMove, 500, continueWith, timer, sequencer).run();
+            new GrazingTimerTask(new ArrayDeque<>(locations), this::mouseMove, 500, continueWith, timer).run();
         }
     }
 

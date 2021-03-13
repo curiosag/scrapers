@@ -20,6 +20,15 @@ public class TileAnalyzerTest {
     }
 
     @Test
+    public void testPatternMatching() {
+        TileAnalyzer analyzer = new TileAnalyzer();
+
+        analyzer.analyze(getTile("/tiles/m_tile_23541_15211.png", 23541, 15211));
+
+        assertEquals(5, analyzer.matched.size());
+    }
+
+    @Test
     public void analyze_online() throws IOException {
         String url = "https://maps.google.com/maps/vt?z=15&x=%d&y=%d";
 
@@ -35,6 +44,8 @@ public class TileAnalyzerTest {
         });
     }
 
+
+
     @Test
     public void analyze_two() {
         TileAnalyzer analyzer = new TileAnalyzer();
@@ -48,7 +59,7 @@ public class TileAnalyzerTest {
     public void analyze_cultural_and_religious() {
         TileAnalyzer analyzer = new TileAnalyzer();
 
-        analyzer.analyze(getTile("/tiles/tile_23541_15211.png", 23541, 15211));
+        analyzer.analyze(getTile("/tiles/m_tile_23541_15211.png", 23541, 15211));
 
         assertEquals(4, analyzer.matched.size());
     }

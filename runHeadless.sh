@@ -7,4 +7,4 @@ export DISPLAY=:99
 
 # 9.82 etc ... left upper/right lower corner of rectangular area to be scraped. boundary detection and scrolling is too stupid to cope with fringes of real maps
 # autorun ... starts scraping with 10 secs delay to give the headless browser the possibility to completeley load the page
-/opt/jdk-15/bin/java -jar --enable-preview ./scrapers-1.0-SNAPSHOT-jar-with-dependencies.jar 9.82 79.6 5.9 80.64 autorun
+/opt/jdk-15/bin/java -jar --enable-preview -javaagent:./scrapers-1.0-SNAPSHOT.jar ./scrapers-1.0-SNAPSHOT-jar-with-dependencies.jar 27.78 85.14 27.62 85.47 21 autorun

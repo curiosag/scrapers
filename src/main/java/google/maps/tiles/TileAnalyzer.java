@@ -4,29 +4,15 @@ import google.maps.Point;
 
 import java.awt.image.BufferedImage;
 import java.util.*;
-import java.util.stream.Collectors;
 
 public class TileAnalyzer {
-    public static int[] colors_wanted = {
-            -11234827,
-            -8875876,
-            -878336,
-            -1153188,
-            -8812853,
-            -15551029};
 
     public static final int maxX = 255;
     public static final int maxY = 255;
-    public static final int zoom = 15;
     private static final int indicatingPixelWidth = 11;
 
-    private final Match[] matchers = initMatchers();
-    public final Set<Integer> colorsEncountered = new HashSet<>();
+    private final PixelSequence[] matchers = initMatchers();
     List<Point> matched = new ArrayList<>();
-
-    public List<Integer> wantedEncountered(){
-        return Arrays.stream(colors_wanted).boxed().filter(colorsEncountered::contains).collect(Collectors.toList());
-    }
 
     public TileAnalyzer() {
     }
@@ -35,7 +21,7 @@ public class TileAnalyzer {
         BufferedImage image = t.getImage();
         for (int x = 0; x < maxX; x++) {
             for (int y = 0; y < maxY; y++) {
-                probe(t, x, y, image.getRGB(x, y));
+                probe(t, x, y);
             }
         }
     }
@@ -46,80 +32,69 @@ public class TileAnalyzer {
         return result;
     }
 
-    private void probe(Tile t, int x, int y, int rgb) {
-        colorsEncountered.add(rgb);
-        Match m = matchers[y];
-        if (isWanted(rgb)) {
-            probeWanted(t, x, y, m, rgb);
+    /* we want this pattern and don't care if we miss it because it is horizontally split on 2 tiles
+     *   +++++++++++ (11)
+     *   +++++++++++ (11)
+     *    +++++++++  (9)
+     *  if they are shorter or longer, ignore them
+     **/
+    private void probe(Tile t, int x, int y) {
+        PixelSequence m = matchers[y];
+        int rgb = t.getImage().getRGB(x, y);
+        if (m.length == indicatingPixelWidth && m.color != rgb) {
+            if (checkPattern(t.getImage(), m.color, x - 1, y)) {
+                matched.add(t.unproject(x, y));
+                System.out.printf("m: %d, %d%n", x, y);
+            }
+        }
+
+        if (m.color == 0 && x == 0) {
+            m.color = rgb;
+            m.length = 1;
+        } else if (m.color == rgb) {
+            m.length++;
         } else {
-            probeNotWanted(t, x, y, m);
+            m.color = rgb;
+            m.length = 1;
         }
     }
 
-    private void probeNotWanted(Tile t, int x, int y, Match m) {
-        switch (m.state) {
-            case INITIAL -> {
-            }
-            case WANTED_SEEN -> reset(m);
-            case POTENTIAL_MATCH -> {
-                handleMatch(t, x, y);
-                reset(m);
-            }
+    private boolean checkPattern(BufferedImage image, int rgb, int x, int y) {
+        if (y > 255 - 3) {
+            return false;
         }
-    }
+        int from = x - 10;
+        int to = x;
+        int row = y + 1;
 
-    private void probeWanted(Tile t, int x, int y, Match m, int c) {
-        switch (m.state) {
-            case INITIAL -> {
-                m.state = RecognitionState.WANTED_SEEN;
-                m.color = c;
-                m.length = 1;
-            }
-            case WANTED_SEEN -> {
-                if (c == m.color) {
-                    m.length++;
-                    if (m.length == indicatingPixelWidth) {
-                        m.state = RecognitionState.POTENTIAL_MATCH;
-                    }
-                } else {
-                    reset(m); // we only search for markers which necessarily are apart
+        try {
+            for (int i = from; i <= to; i++) {
+                if (!(image.getRGB(i, row) == rgb)) {
+                    return false;
                 }
             }
-            case POTENTIAL_MATCH -> {
-                if (c != m.color) {
-                    handleMatch(t, x, y);
-                }
-                reset(m);
+        } catch (Exception e) {
+            e.printStackTrace();
+        }
+        row = y + 2;
+        if (image.getRGB(from, row) == rgb || image.getRGB(to, row) == rgb) {
+            return false;
+        }
+        for (int i = from + 1; i <= to - 1; i++) {
+            if (!(image.getRGB(i, row) == rgb)) {
+                return false;
             }
         }
+        return true;
     }
 
-    private void reset(Match m) {
-        m.state = RecognitionState.INITIAL;
-        m.color = 0;
-        m.length = 0;
-    }
-
-    private void handleMatch(Tile t, int x, int y) {
-        matched.add(t.unproject(x, y, zoom));
-    }
-
-    Match[] initMatchers() {
-        Match[] result = new Match[maxY + 1];
+    PixelSequence[] initMatchers() {
+        PixelSequence[] result = new PixelSequence[maxY + 1];
 
         for (int i = 0; i < maxY; i++) {
-            result[i] = new Match();
+            result[i] = new PixelSequence();
         }
         return result;
-    }
-
-    public boolean isWanted(int color) {
-        for (int j : colors_wanted) {
-            if (j == color) {
-                return true;
-            }
-        }
-        return false;
     }
 
 }

@@ -41,11 +41,11 @@ public class Tile {
         return image;
     }
 
-    public Point unproject(int x, int y, int zoomLevel) {
+    public Point unproject(int x, int y) {
         int globalX = tileX * tileWidth + x;
         int globalY = tileY * tileWidth + y;
 
-        var size = tilesize * Math.pow(2, zoomLevel);
+        var size = tilesize * Math.pow(2, zoom);
         var bc = (size / 360);
         var cc = (size / PiDouble);
         var zc = size / 2;

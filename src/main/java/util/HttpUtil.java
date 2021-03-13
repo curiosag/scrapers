@@ -17,6 +17,7 @@ import java.io.IOException;
 import java.net.HttpURLConnection;
 import java.net.URL;
 import java.nio.charset.StandardCharsets;
+import java.util.concurrent.ScheduledThreadPoolExecutor;
 import java.util.concurrent.TimeUnit;
 
 
@@ -81,7 +82,7 @@ public final class HttpUtil {
 
         ImageReadParam param = reader.getDefaultReadParam();
 
-        param.setSourceRegion(new Rectangle(0, 0, 256, 256));
+        param.setSourceRegion(new Rectangle(0, 0, width, height));
         return reader.read(0, param);
     }
 
