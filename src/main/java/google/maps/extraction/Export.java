@@ -19,13 +19,14 @@ import java.util.stream.IntStream;
 import static google.maps.Area.rectangle;
 
 public class Export {
+
     public static void main(String[] args) throws IOException {
         RegionsDao r = new RegionsDao();
 // List<List<Point>> area = r.getBoundaries("name0", "Sri Lanka");
 
         Polygon p = asPolygon(new Area(rectangle(new Point(-2, 100), new Point(-10, 125))).getBoundary());
-        createCsv("/home/ssmertnig/temp/scrapemore/Bali.csv", p);
-        createHtml("/home/ssmertnig/dev/repo/scrapers/src/main/resources/Bali.html", p);
+        //createCsv("/home/ssmertnig/temp/scrapemore/Bali.csv", p);
+        createHtml("/home/ssmertnig/dev/repo/scrapers/src/main/resources/Nepal.html", p);
     }
 
     private static void createHtml(String pageFullName, Polygon poly) throws IOException {
@@ -33,7 +34,7 @@ public class Export {
         PlacesDao p = new PlacesDao();
 
         try (FileWriter w = new FileWriter(pageFullName)) {
-            List<PlaceSearchResultItem> places = (List<PlaceSearchResultItem>) restrict(p.getPlaces(), poly);
+            List<PlaceSearchResultItem> places = p.getPlaces().stream().filter(i -> i.id > 19725).collect(Collectors.toList());// (List<PlaceSearchResultItem>) restrict(p.getPlaces(), poly);
             String rendered = viz.getPage(places, Collections.emptyList(), Collections.emptyList());
             w.write(rendered);
         }

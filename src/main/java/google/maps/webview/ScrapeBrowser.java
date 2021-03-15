@@ -150,6 +150,7 @@ class ScrapeBrowser extends Region {
             return;
         if (url.startsWith("/maps/preview/") || url.startsWith("/maps/rpc/vp?")) {
             CoordExtractor.extract(url).ifPresent(p -> {
+                log(url);
                 if (searchArea.contains(p)) {
                     onCoordinateSeen.accept(p);
                     areaExceeded = AreaExceeded.NO;

@@ -1,9 +1,6 @@
 package google.maps.extraction;
 
-import com.fasterxml.jackson.databind.JsonNode;
-import com.fasterxml.jackson.databind.ObjectMapper;
 import com.opencsv.CSVReader;
-import google.maps.responseparser.ResponseExtractor;
 import google.maps.searchapi.PlaceSearchResultItem;
 
 import java.io.*;
@@ -19,14 +16,15 @@ public class ResultFileExtractor {
     public final static String resultFilePath = "./scraped/responses";
 
     public static void main(String[] args) throws SQLException {
-        extractFromCsv( "/home/ssmertnig/dev/data/temples/todo/baliU.csv", "/home/ssmertnig/dev/data/temples/todo/bali.sql", ResultFileExtractor::getSql);
+        extractToFile("./scraped/api/", "./scraped/apiPlaces.sql", ResultFileExtractor::getSql);
+       // extractFromCsv("/home/ssmertnig/dev/data/temples/todo/baliU.csv", "/home/ssmertnig/dev/data/temples/todo/bali.sql", ResultFileExtractor::getSql);
     }
 
     private static void extractFromCsv(String csvInputPath, String outputFileName, Function<PlaceSearchResultItem, List<String>> outputGenerator) {
         final int[] count = new int[1];
         char del = 8;
         try (FileWriter w = new FileWriter(outputFileName)) {
-            fromCsv(csvInputPath).forEach( i -> {
+            fromCsv(csvInputPath).forEach(i -> {
                 outputGenerator.apply(i).forEach(line -> {
                     try {
                         w.write(line);
@@ -48,18 +46,17 @@ public class ResultFileExtractor {
     }
 
 
-    private static void extractToFile(String inputPath, String outputFileName, Function<PlaceSearchResultItem, List<String>> outputGenerator) {
+    private static void extractToFile(String inputPath, String outputFileName, Function<PlaceSearchResultItem, String> outputGenerator) {
         final int[] count = new int[1];
         char del = 8;
         try (FileWriter w = new FileWriter(outputFileName)) {
-            extractFromFiles(inputPath, i -> {
-                outputGenerator.apply(i).forEach(line -> {
-                    try {
-                        w.write(line);
-                    } catch (IOException e) {
-                        throw new RuntimeException(e);
-                    }
-                });
+            extractApiPlacesFromFiles(inputPath, i -> {
+                String line = outputGenerator.apply(i);
+                try {
+                    w.write(line);
+                } catch (IOException e) {
+                    throw new RuntimeException(e);
+                }
 
                 for (int j = 0; j < String.valueOf(count[0]).length(); j++) {
                     System.out.print(del);
@@ -80,27 +77,22 @@ public class ResultFileExtractor {
                 i.vicinity, i.lat, i.lon);
     }
 
-    private static final String insertPlace = "insert into places_scraped (id, place_id, name, plus_compound_code, global_code, vicinity, geom) values ('%s', '%s','%s','%s','%s','%s', ST_GeomFromText('POINT(%.14f %.14f)')) ON CONFLICT (place_id) DO NOTHING;\n";
+    private static final String insertPlace = "insert into place_scraped (place_id, name, plus_compound_code, global_code, vicinity, geom) values ('%s','%s','%s','%s','%s', ST_GeomFromText('POINT(%.14f %.14f)', 4326)) ON CONFLICT (place_id) DO NOTHING;\n";
 
-    static int maxId = 13255;
-    public static List<String> getSql(PlaceSearchResultItem i) {
-        List<String> result = new ArrayList<>();
-        result.add(String.format(insertPlace, ++maxId, i.placeId, quote(i.name),
-                i.plus_compound_code, quote(i.adress), quote(i.vicinity), i.lat, i.lon));
-        return result;
+    public static String getSql(PlaceSearchResultItem i) {
+        return String.format(insertPlace, i.placeId, quote(i.name),
+                i.plus_compound_code, quote(i.adress), quote(i.vicinity), i.lat, i.lon);
     }
 
     private static String quote(String s) {
         return s.replaceAll("'", "''").replaceAll("\"", "''");
     }
 
-
-
     /* preview number of distinct places:
-       grep -nri "place_id" |  awk'{ print $4}' | sort | uniq | wc -l
+       grep -nri "place_id" |  awk '{ print $4}' | sort | uniq | wc -l
     * */
 
-    private static void extractFromFiles(String path, Consumer<PlaceSearchResultItem> sink) throws IOException {
+    private static void extractMapPlaceDetailsFromFiles(String path, Consumer<PlaceSearchResultItem> sink) throws IOException {
         Set<String> locationIds = new HashSet<>();
 
         String[] files = (new File(path)).list((f, name) -> name.contains(".txt"));
@@ -109,13 +101,26 @@ public class ResultFileExtractor {
         }
 
         for (String file : files) {
-            Optional<PlaceSearchResultItem> item = ResponseExtractor.extract(Files.readString(Path.of(path + file)));
+            Optional<PlaceSearchResultItem> item = MapPlaceDetailsResponseExtractor.extract(Files.readString(Path.of(path + file)));
             item.ifPresent(i -> {
                 if (!locationIds.contains(i.placeId)) {
                     sink.accept(i);
                     locationIds.add(i.placeId);
                 }
             });
+        }
+    }
+
+    public static void extractApiPlacesFromFiles(String path, Consumer<PlaceSearchResultItem> sink) throws IOException {
+        String[] files = (new File(path)).list((f, name) -> name.contains(".json"));
+        if (files == null) {
+            throw new IllegalStateException();
+        }
+
+        for (String file : files) {
+            String content = Files.readString(Path.of(path + file));
+
+            Objects.requireNonNull(ApiPlaceDetailsExtractor.extract(content)).forEach(sink);
         }
     }
 
@@ -126,7 +131,7 @@ public class ResultFileExtractor {
 
             String[] parts;
             while ((parts = csvReader.readNext()) != null) {
-                if(parts.length == 0)
+                if (parts.length == 0)
                     continue;
                 String placeid = parts[0];
                 String name = parts[1];

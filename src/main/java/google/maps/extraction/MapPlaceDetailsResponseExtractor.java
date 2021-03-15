@@ -1,10 +1,12 @@
-package google.maps.responseparser;
+package google.maps.extraction;
 
+import google.maps.responseparser.Node;
+import google.maps.responseparser.ResponseParser;
 import google.maps.searchapi.PlaceSearchResultItem;
 
 import java.util.Optional;
 
-public class ResponseExtractor {
+public class MapPlaceDetailsResponseExtractor {
 
     public static Optional<PlaceSearchResultItem> extract(String s) {
         Node n = new ResponseParser(s).parse();

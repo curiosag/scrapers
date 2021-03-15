@@ -17,6 +17,11 @@ import static org.junit.Assert.*;
 public class NearbysearchTest {
 
     @Test
+    public void testGet() {
+
+    }
+
+    @Test
     public void testGetPageToken() {
         assertEquals("SeO-wiw", getPageToken(fragment).get());
         assertFalse(getPageToken("bla").isPresent());

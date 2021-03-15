@@ -1,7 +1,7 @@
 package google.maps.webview;
 
 import google.maps.extraction.ResultFileExtractor;
-import google.maps.responseparser.ResponseExtractor;
+import google.maps.extraction.MapPlaceDetailsResponseExtractor;
 import util.HttpUtil;
 
 import java.io.File;
@@ -33,7 +33,7 @@ public class PlaceDetailsLoader {
 
         String response = HttpUtil.getByUrlConnection(url, 10);
         if (response.contains("[\"hindu_temple\"]")) {
-            ResponseExtractor.extract(response).ifPresent(b -> {
+            MapPlaceDetailsResponseExtractor.extract(response).ifPresent(b -> {
                 writeToFile(response, numberResponses);
                 appendToFile(getCsv(b));
                 incResponses();

@@ -1,5 +1,5 @@
 package google.maps;
 
 public interface Const {
-    String connectionUrl = "jdbc:postgresql://172.17.0.2:5432/postgres?user=postgres&password=PhHhSka85GT6";
+    String connectionUrl = "jdbc:postgresql://fat:5432/temple?user=sm&password=vz8qgg3fberB3OCDBmUcytcUF47ZF1R57YfDluk";
 }

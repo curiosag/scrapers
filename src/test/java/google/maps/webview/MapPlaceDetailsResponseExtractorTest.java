@@ -2,7 +2,7 @@ package google.maps.webview;
 
 import google.maps.searchapi.PlaceSearchResultItem;
 import org.junit.Test;
-import google.maps.responseparser.ResponseExtractor;
+import google.maps.extraction.MapPlaceDetailsResponseExtractor;
 
 import java.io.*;
 import java.util.Optional;
@@ -10,7 +10,7 @@ import java.util.stream.Collectors;
 
 import static org.junit.Assert.assertTrue;
 
-public class ResponseExtractorTest {
+public class MapPlaceDetailsResponseExtractorTest {
 
     @Test
     public void testExtract() {
@@ -19,12 +19,8 @@ public class ResponseExtractorTest {
             throw new IllegalStateException();
         }
         String data = new BufferedReader(new InputStreamReader(s)).lines().collect(Collectors.joining());
-        Optional<PlaceSearchResultItem> ex = ResponseExtractor.extract(data);
+        Optional<PlaceSearchResultItem> ex = MapPlaceDetailsResponseExtractor.extract(data);
         assertTrue(ex.isPresent());
     }
 
-    @Test
-    public void hu() throws IOException {
-
-    }
 }
