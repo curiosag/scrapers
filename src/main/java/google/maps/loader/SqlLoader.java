@@ -15,7 +15,7 @@ public class SqlLoader {
 
     public static void main(String[] args) {
         //load(GeoJsonConverter.toSql("ST_NM", 2, 1, 1, 0, path + "india_state.json"));
-        load(GeoJsonConverter.toSql("admin1Name_en", null,49, path + "Indonesia.json"));
+        load(GeoJsonConverter.toSql("admin1Name_en", null, path + "Indonesia.json"));
 
     }
 

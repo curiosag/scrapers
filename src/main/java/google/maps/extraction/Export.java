@@ -21,20 +21,20 @@ import static google.maps.Area.rectangle;
 public class Export {
 
     public static void main(String[] args) throws IOException {
-        RegionsDao r = new RegionsDao();
+//        RegionsDao r = new RegionsDao();
 // List<List<Point>> area = r.getBoundaries("name0", "Sri Lanka");
 
-        Polygon p = asPolygon(new Area(rectangle(new Point(-2, 100), new Point(-10, 125))).getBoundary());
+        //    Polygon p = asPolygon(new Area(rectangle(new Point(-2, 100), new Point(-10, 125))).getBoundary());
         //createCsv("/home/ssmertnig/temp/scrapemore/Bali.csv", p);
-        createHtml("/home/ssmertnig/dev/repo/scrapers/src/main/resources/Nepal.html", p);
+        createHtml("/home/ssmertnig/dev/repo/scrapers/src/main/resources/Nepal.html", 50);
     }
 
-    private static void createHtml(String pageFullName, Polygon poly) throws IOException {
+    private static void createHtml(String pageFullName, int regionId) throws IOException {
         Export viz = new Export();
         PlacesDao p = new PlacesDao();
 
         try (FileWriter w = new FileWriter(pageFullName)) {
-            List<PlaceSearchResultItem> places = p.getPlaces().stream().filter(i -> i.id > 19725).collect(Collectors.toList());// (List<PlaceSearchResultItem>) restrict(p.getPlaces(), poly);
+            List<PlaceSearchResultItem> places = p.getPlaces(regionId);// (List<PlaceSearchResultItem>) restrict(p.getPlaces(), poly);
             String rendered = viz.getPage(places, Collections.emptyList(), Collections.emptyList());
             w.write(rendered);
         }
@@ -67,7 +67,7 @@ public class Export {
         PlacesDao p = new PlacesDao();
 
         try (FileWriter w = new FileWriter(csvFileName)) {
-            List<PlaceSearchResultItem> places = (List<PlaceSearchResultItem>) restrict(p.getPlaces(), poly);
+            List<PlaceSearchResultItem> places = (List<PlaceSearchResultItem>) restrict(p.getPlaces(50), poly);
             places.forEach(i -> {
                 try {
                     w.write(ResultFileExtractor.getCsv(i));

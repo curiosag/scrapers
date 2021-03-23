@@ -16,22 +16,20 @@ public class ResultFileExtractor {
     public final static String resultFilePath = "./scraped/responses";
 
     public static void main(String[] args) throws SQLException {
-        extractToFile("./scraped/api/", "./scraped/apiPlaces.sql", ResultFileExtractor::getSql);
-       // extractFromCsv("/home/ssmertnig/dev/data/temples/todo/baliU.csv", "/home/ssmertnig/dev/data/temples/todo/bali.sql", ResultFileExtractor::getSql);
+        //extractToFile("./scraped/api/", "./scraped/apiPlaces.sql", ResultFileExtractor::getSql);
+        extractFromCsv("/home/ssmertnig/temp/responses.csv", "/home/ssmertnig/temp/responses.sql", ResultFileExtractor::getSql);
     }
 
-    private static void extractFromCsv(String csvInputPath, String outputFileName, Function<PlaceSearchResultItem, List<String>> outputGenerator) {
+    private static void extractFromCsv(String csvInputPath, String outputFileName, Function<PlaceSearchResultItem, String> outputGenerator) {
         final int[] count = new int[1];
         char del = 8;
         try (FileWriter w = new FileWriter(outputFileName)) {
             fromCsv(csvInputPath).forEach(i -> {
-                outputGenerator.apply(i).forEach(line -> {
-                    try {
-                        w.write(line);
-                    } catch (IOException e) {
-                        throw new RuntimeException(e);
-                    }
-                });
+                try {
+                    w.write(outputGenerator.apply(i));
+                } catch (IOException e) {
+                    throw new RuntimeException(e);
+                }
 
                 for (int j = 0; j < String.valueOf(count[0]).length(); j++) {
                     System.out.print(del);

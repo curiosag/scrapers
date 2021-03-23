@@ -15,6 +15,8 @@ import java.awt.*;
 import java.awt.image.BufferedImage;
 import java.io.IOException;
 import java.net.HttpURLConnection;
+import java.net.InetSocketAddress;
+import java.net.Proxy;
 import java.net.URL;
 import java.nio.charset.StandardCharsets;
 import java.util.concurrent.ScheduledThreadPoolExecutor;
@@ -67,8 +69,35 @@ public final class HttpUtil {
         }
     }
 
-    public static BufferedImage getImageByUrl(String url, int timeout) throws IOException {
-        HttpURLConnection conn = (HttpURLConnection) new URL(url).openConnection();
+
+    /*
+    * https://maps.google.com/maps/vt?z=15&x=24167&y=13718
+    *
+
+
+ GET /maps/vt?z=15&x=24167&y=13718 HTTP/2
+Host: maps.google.com
+User-Agent: Mozilla/5.0 (X11; Ubuntu; Linux x86_64; rv:86.0) Gecko/20100101 Firefox/86.0
+Accept: text/html,application/xhtml+xml,application/xml;q=0.9,image/webp
+    Accept-Language: en-US,en;q=0.5
+    Accept-Encoding: gzip, deflate, br
+    Connection: keep-alive
+    Cookie: NID=209=gy8TTv-3xH0DK6sWN81K2D9V15wxzluzfEpSSWTKQeKggpLGt8gn0m_j1gOWAtrpc3-lj1pxyX6agllumwuj8ZrK7Lae5hb7ZfbmqY_JB8pZpjnXqOcEv6UcjVTwN3Nmbv-LNLpE2eyaROvFMeuqLIQldHzK6iRpCiD9KgLa1oY; CONSENT=YES+AT.de+V13+B+603; ANID=AHWqTUnkoGOuYOLbvD1wQ3zANZ6YblXtW_VPahDefps2UYDiP_qmVGnv_uWagHSw
+    Upgrade-Insecure-Requests: 1
+    If-None-Match: 0c9562b543606ff2e
+    Cache-Control: max-age=0
+    TE: Trailers
+
+
+    *
+    * */
+    public static BufferedImage getImageByUrl(String url, int timeout, Proxy proxy) throws IOException {
+        HttpURLConnection conn;
+        if (proxy == null)
+            conn = (HttpURLConnection) new URL(url).openConnection();
+        else
+            conn = (HttpURLConnection) new URL(url).openConnection(proxy);
+
         conn.setInstanceFollowRedirects(true);
         conn.setConnectTimeout(timeout);
         conn.connect();

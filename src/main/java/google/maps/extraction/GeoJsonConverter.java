@@ -3,6 +3,7 @@ package google.maps.extraction;
 import com.fasterxml.jackson.databind.JsonNode;
 import com.fasterxml.jackson.databind.ObjectMapper;
 
+import java.io.FileWriter;
 import java.io.IOException;
 import java.nio.file.Files;
 import java.nio.file.Path;
@@ -14,10 +15,22 @@ record GeoRecord(String name, String supName, String geo) {
 public class GeoJsonConverter {
 
     public static void main(String[] args) throws IOException {
-        toSql("name", null, 2, "/home/ssmertnig/dev/data/temples/qgisstuff/sl_provinces.json");
+        List<String> sql = toSql("Region", null, "/home/ssmertnig/dev/data/temples/qgisstuff/nepal.json");
+        write(sql, "/home/ssmertnig/dev/data/temples/qgisstuff/nepal.sql");
     }
 
-    public static List<String> toSql(String nameProperty, String supNameProperty, int startid, String fileIn) {
+
+    private static void write(List<String> values, String targetPath) {
+        try (FileWriter writer = new FileWriter(targetPath)) {
+            for (String v : values) {
+                writer.write(v + System.lineSeparator());
+            }
+        } catch (IOException e) {
+            e.printStackTrace();
+        }
+    }
+
+    public static List<String> toSql(String nameProperty, String supNameProperty, String fileIn) {
         Path pathIn = Path.of(fileIn);
 
         try {
@@ -25,7 +38,7 @@ public class GeoJsonConverter {
 
             List<String> statements = new ArrayList<>();
             for (GeoRecord r : entries) {
-                statements.add(toSqlInsertStmt(startid++, r));
+                statements.add(toSqlInsertStmt(r));
             }
             return statements;
         } catch (IOException e) {
@@ -33,11 +46,11 @@ public class GeoJsonConverter {
         }
     }
 
-    private static String toSqlInsertStmt(int id, GeoRecord r) {
+    private static String toSqlInsertStmt(GeoRecord r) {
         String query = """              
-                INSERT INTO STAGING_REGION (id, name, name_sup, geom) values(%d, '%s', '%s', ST_GeomFromGeoJSON('{"type":"Multipolygon","coordinates":[%s]}'));               
+                INSERT INTO lola_region_staging (name, name_sup, geom) values('%s', '%s', ST_GeomFromGeoJSON('{"type":"Multipolygon","coordinates":[%s]}'));               
                 """;
-        return String.format(query, id, r.name(), r.supName(), r.geo());
+        return String.format(query, r.name(), r.supName(), r.geo());
     }
 
     private static String toMultiPolygon(String type, JsonNode coords) {

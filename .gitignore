@@ -1,1 +1,3 @@
 target/
+data/
+/src/test/resources/tiles_loaded/

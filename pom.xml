@@ -88,9 +88,8 @@
                         <configuration>
                             <archive>
                                 <manifest>
-                                    <mainClass>
-                                        google.maps.webview.Launcher
-                                    </mainClass>
+                                    <mainClass>google.maps.tiles.TileScraper</mainClass>
+                                    <addClasspath>true</addClasspath>
                                 </manifest>
                             </archive>
                             <descriptorRefs>

@@ -60,16 +60,21 @@ public class ScraperApplication extends Application {
         scrapeBrowser = new ScrapeBrowser(autorun, searchArea, currentPoint, zoom, this::onPointSeen);
         stage.setScene(new Scene(scrapeBrowser, 1910, 900, Color.web("#666970")));
 
+        //scheduleShrinkMemTask(stage);
+        stage.show();
+    }
+
+    private void scheduleShrinkMemTask(Stage stage) {
         timer.schedule(new TimerTask() {
             @Override
             public void run() {
-                System.gc();
                 if (exceedsMemBoundary()) {
                     Platform.runLater(() -> resetStage(stage));
+                    System.gc();
                 }
+                scheduleShrinkMemTask(stage);
             }
         }, scrapeBrowser == null ? 0 : 300000);
-        stage.show();
     }
 
     private boolean exceedsMemBoundary() {

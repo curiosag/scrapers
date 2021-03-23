@@ -1,6 +1,6 @@
 package google.maps.webview.intercept;
 
-import google.maps.webview.PlaceDetailsLoader;
+import google.maps.webview.PlaceDetailsWriter;
 import net.bytebuddy.ByteBuddy;
 import net.bytebuddy.description.type.TypeDescription;
 import net.bytebuddy.dynamic.ClassFileLocator;
@@ -13,7 +13,6 @@ import net.bytebuddy.pool.TypePool;
 import java.lang.instrument.Instrumentation;
 import java.net.URLConnection;
 import java.nio.ByteBuffer;
-import java.util.HashMap;
 import java.util.concurrent.Callable;
 import java.util.function.Consumer;
 import java.util.function.Function;
@@ -26,7 +25,7 @@ public class URLLoaderInterceptor {
     static Consumer<URLConnection> onDidReceiveResponse;
     static Consumer<ByteBuffer> onDidReceiveData;
     static Runnable onFinishedLoading;
-    private static PlaceDetailsLoader loader = new PlaceDetailsLoader();
+    private static PlaceDetailsWriter loader = new PlaceDetailsWriter();
 
     // https://stackoverflow.com/questions/39987414/delegate-private-method-in-bytebuddy-with-super-possible
     public static void didFinishLoading(@SuperCall Callable<Void> c) throws Exception {
@@ -107,10 +106,4 @@ public class URLLoaderInterceptor {
         };
     }
 
-    public static PlaceDetailsLoader getCsvExtractor() {
-        if (loader == null) {
-            loader = new PlaceDetailsLoader();
-        }
-        return loader;
-    }
 }

@@ -122,6 +122,21 @@ class ScrapeBrowser extends Region {
 
         setupJsConsoleListener();
 
+String headerHack =
+        """
+        Mozilla/5.0 (X11; Linux x86_64; rv:78.0) Gecko/20100101 Firefox/78.0
+        Host: maps.google.com
+        Accept-Language: en-US,en;q=0.5
+        DNT: 1
+        Connection: keep-alive
+        Cookie: NID=211=VDSs6jAdTmj6I2bpYwRcyFusuy5SJ93O0BlyIyZvdmlrkz-N3vyN2vsKRE3Hj6BfgQRQ5ksLjcX852clDMFOYTpRujtg6gfwe7IufLMhB51B29mSGPkTn_xDoCqZW_BstWqWJmCMLb9Zdaq66bJHYeU8mF8hFEpJi8MrxRFH2cEhLhnZh6rstSlxXvf2KB1wYjy_aW1VEK24tgQRfG-HvrejIn_KsZyjiW2748DblcoQSP9aSDdd7VP6n1AmzYJoh6KWmYuHEJ5k4t2tOo1-nI-zwh5EDopyCVnMkzuozGCsBidpzVlgDu3LQvOu-NMCFhbfdDEhA0gPf6TjeS-Ym6mzYRI4hdIoFSAHOew8knVUhT2ZWIA; CONSENT=YES+AT.de+V13+BX+419; 1P_JAR=2021-03-22-09; ANID=AHWqTUm0u9zV9pz51Zr64JKbwH-0LZnHm2zqpMMNvhLIrrx575SaFX9tts4YnRLp; SID=7gfrnxO9mtwj7BqsQPFt8Wv3TDCw_smNT2dkHpiiGpLp0HGDLdBiM9_Cu5NAFgIH66KOBg.; __Secure-3PSID=7gfrnxO9mtwj7BqsQPFt8Wv3TDCw_smNT2dkHpiiGpLp0HGDp_2My0jsAFtoWtINHDnAew.; HSID=A2aDrFhoiH8qhT1_-; SSID=AiOKPxIRf03KeorOt; APISID=nfgl8v7vS_f3SfOA/AC28TtK4DWnnODnXU; SAPISID=kZz-Ozfu1e1h6gLM/APCTwk7yKwRNVw8W4; __Secure-3PAPISID=kZz-Ozfu1e1h6gLM/APCTwk7yKwRNVw8W4; SIDCC=AJi4QfExMyJfIMmB9oZFpWMPSZxgMtXPtgPYAI8wR_bvZSIk4MMPaz57tA_YyIXpnAJpRMBX1Ps; __Secure-3PSIDCC=AJi4QfGgDLX-z6WrQMF0Lz322ml_1NJUSu6DCWPnT_UVRssMIi6jCX3HsGP5vmme0HuCWk3qC44P
+        Upgrade-Insecure-Requests: 1
+        If-None-Match: 0c9562b543606ff2e
+        Cache-Control: max-age=0
+        TE: Trailers
+        """;
+
+        webEngine.setUserAgent("headerHack");
         webEngine.load(getStartUrl(startAt, zoom));
         maybeAutorun(autorun);
 
