@@ -1,10 +1,11 @@
 package google.maps.webview;
 
 import javafx.application.Platform;
+import javafx.scene.input.KeyCode;
 import javafx.scene.input.MouseButton;
 import javafx.scene.robot.Robot;
 
-import java.util.Timer;
+import java.util.List;
 import java.util.TimerTask;
 
 public class MoveTimerTask extends TimerTask {
@@ -56,8 +57,8 @@ public class MoveTimerTask extends TimerTask {
         } else {
             Platform.runLater(() -> {
                 robot.mouseRelease(MouseButton.PRIMARY);
-                onMoved.run();
             });
+            triggerContextMenu(onMoved);
         }
     }
 
@@ -74,6 +75,33 @@ public class MoveTimerTask extends TimerTask {
 
     private void scheduleNext() {
         timer.schedule(new MoveTimerTask(x + deltaX, startX, endX, deltaX, y + deltaY, startY, endY, deltaY, delay, robot, onMoved, timer), delay);
+    }
+
+    private record Delayable(long delay, Runnable r) {
+    }
+
+    private void triggerContextMenu(Runnable andThen) {
+        List<Delayable> tasks = List.of(
+                new Delayable(100, () -> robot.mousePress(MouseButton.SECONDARY)),
+                new Delayable(100, () -> robot.mouseRelease(MouseButton.SECONDARY)),
+                new Delayable(100, andThen));
+
+        schedule(tasks);
+    }
+
+    private void schedule(List<Delayable> tasks) {
+        if (tasks.size() > 0) {
+            Delayable current = tasks.get(0);
+            timer.schedule(new TimerTask() {
+                @Override
+                public void run() {
+                    Platform.runLater(() -> {
+                        current.r().run();
+                        schedule(tasks.subList(1, tasks.size()));
+                    });
+                }
+            }, current.delay);
+        }
     }
 
     @Override

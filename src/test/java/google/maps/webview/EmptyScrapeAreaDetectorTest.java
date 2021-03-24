@@ -15,7 +15,7 @@ import java.util.List;
 import static org.junit.Assert.*;
 import static google.maps.webview.EmptyAreaDetector.isEmptyArea;
 
-public class EmptyAreaDetectorTest {
+public class EmptyScrapeAreaDetectorTest {
 
     @Test
     public void testIsEmptyArea() {
@@ -29,7 +29,7 @@ public class EmptyAreaDetectorTest {
     }
 
     public static void main(String[] args) {
-        new EmptyAreaDetectorTest().testIsEmptyArea();
+        new EmptyScrapeAreaDetectorTest().testIsEmptyArea();
     }
 
     private void drawTestArea(PixelReader r, int x, int y) {

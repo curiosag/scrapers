@@ -4,11 +4,10 @@ import org.locationtech.jts.geom.Coordinate;
 import org.locationtech.jts.geom.GeometryFactory;
 import org.locationtech.jts.geom.Polygon;
 
-import java.util.Collections;
 import java.util.Comparator;
 import java.util.List;
 
-public class Area {
+public class ScrapeArea {
 
     private final List<Point> boundary;
     private Point southernMost;
@@ -19,9 +18,21 @@ public class Area {
     public Point getSouthernMost(){
         if(southernMost == null)
         {
-            southernMost = boundary.stream().min(Comparator.comparingDouble(a -> a.lat)).orElseThrow(IllegalStateException::new);
+            southernMost = getApexSouth(boundary);
         }
         return southernMost;
+    }
+
+    public boolean exceedsSouth(Point p){
+        return p.lat < getSouthernMost().lat;
+    }
+
+    public static Point getApexSouth(List<Point> boundary) {
+        return boundary.stream().min(Comparator.comparingDouble(a -> a.lat)).orElseThrow(IllegalStateException::new);
+    }
+
+    public static Point getApexNorth(List<Point> boundary) {
+        return boundary.stream().max(Comparator.comparingDouble(a -> a.lat)).orElseThrow(IllegalStateException::new);
     }
 
     public static List<Point> rectangle(Point lu, Point rl) {
@@ -29,12 +40,8 @@ public class Area {
                 new Point(rl.lat, lu.lon), new Point(lu.lat, lu.lon));
     }
 
-    public Area(List<Point> boundaries) {
+    public ScrapeArea(List<Point> boundaries) {
         this.boundary = boundaries;
-    }
-
-    public List<Point> getBoundary() {
-        return Collections.unmodifiableList(boundary);
     }
 
     public boolean contains(Point p) {
@@ -54,4 +61,9 @@ public class Area {
 
         geo = geoFactory.createPolygon(coordinates);
     }
+
+    public List<Point> getBoundary() {
+        return boundary;
+    }
+
 }

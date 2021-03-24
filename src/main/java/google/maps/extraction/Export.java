@@ -1,6 +1,5 @@
 package google.maps.extraction;
 
-import google.maps.Area;
 import google.maps.Point;
 import google.maps.dao.PlacesDao;
 import google.maps.dao.RegionsDao;
@@ -15,8 +14,6 @@ import java.util.Collections;
 import java.util.List;
 import java.util.stream.Collectors;
 import java.util.stream.IntStream;
-
-import static google.maps.Area.rectangle;
 
 public class Export {
 

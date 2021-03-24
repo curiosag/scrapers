@@ -12,6 +12,7 @@
         <project.reporting.outputEncoding>UTF-8</project.reporting.outputEncoding>
         <java.version>15</java.version>
         <scala.version>2.12.6</scala.version>
+        <manifestMainClass>google.maps.webview.Launcher</manifestMainClass>
     </properties>
 
     <build>
@@ -59,7 +60,7 @@
                 <configuration>
                     <archive>
                         <manifest>
-                            <mainClass>google.maps.webview.Launcher</mainClass>
+                            <mainClass>${manifestMainClass}</mainClass>
                             <addClasspath>true</addClasspath>
                             <classpathMavenRepositoryLayout>true</classpathMavenRepositoryLayout>
                             <classpathPrefix>/home/ssmertnig/.m2/repository</classpathPrefix>
@@ -88,7 +89,7 @@
                         <configuration>
                             <archive>
                                 <manifest>
-                                    <mainClass>google.maps.tiles.TileScraper</mainClass>
+                                    <mainClass>${manifestMainClass}</mainClass>
                                     <addClasspath>true</addClasspath>
                                 </manifest>
                             </archive>

@@ -5,7 +5,7 @@ import javafx.scene.web.WebView;
 public class ScreenCoordinatesMap {
     public static final float offsetX = 80; // avoid the menu in the left upper corner, the browser gets totally confused
                                             // if the hidden menu gets triggered and actually pops up
-    public static final float offsetY = 0; // for the window border
+    public static final float offsetY = 30; // for the window border
 
     public final float x;
     public final float y;

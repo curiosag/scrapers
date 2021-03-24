@@ -1,29 +1,23 @@
 package google.maps.webview;
 
-import com.google.common.base.Charsets;
 import javafx.beans.value.ObservableValue;
 import javafx.concurrent.Worker;
 import javafx.scene.web.WebEngine;
 import netscape.javascript.JSObject;
 
-import java.io.BufferedReader;
-import java.io.IOException;
-import java.io.InputStream;
-import java.io.InputStreamReader;
-import java.nio.charset.Charset;
 import java.util.function.BiConsumer;
 import java.util.function.Consumer;
-
-import static google.maps.webview.Log.log;
 
 public class JsBridge {
 
     private final Consumer<String> onUrl;
+    private final Consumer<String> onContextMenuItem;
     private final BiConsumer<String, String> onResponse;
 
-    public JsBridge(WebEngine webEngine, Consumer<String> onUrl, BiConsumer<String, String> onResponse) {
+    public JsBridge(WebEngine webEngine, Consumer<String> onUrl, BiConsumer<String, String> onResponse, Consumer<String> onContextMenuItem) {
         this.onUrl = onUrl;
         this.onResponse = onResponse;
+        this.onContextMenuItem = onContextMenuItem;
         // jsbridge must be a variable. see https://www.frankhissen.de/javafx-webview-webkit-fehler-javascript-java-kommunikation-java-8-frank-hissen-it-blog.html
         JsBridge jsbridge = this;
         webEngine.getLoadWorker().stateProperty().addListener(
@@ -34,6 +28,7 @@ public class JsBridge {
                         win.setMember("jsbridge", jsbridge);
                         webEngine.executeScript(xmlrequestStartInterceptor);
                         webEngine.executeScript(xmlrequestDoneInterceptor);
+                        webEngine.executeScript(contextMenuObserver);
                         cssTweaks.styleIds(webEngine, "vasquette", "minimap", "fineprint", "searchbox");
                         cssTweaks.styleClasses(webEngine, "section-layout","searchbox-icon", "section-cardbox", "app-viewcard-strip", "widget-pane-toggle-button-container", "section-promo-card-text-container");
                     }
@@ -46,6 +41,10 @@ public class JsBridge {
 
     public void onResponse(String headers, String body) {
         onResponse.accept(headers, body);
+    }
+
+    public void onContextMenuItem(String value){
+        onContextMenuItem.accept(value);
     }
 
     private final String xmlrequestStartInterceptor = """
@@ -78,20 +77,18 @@ public class JsBridge {
                     }))();
                     """;
 
-    public static String stream2String(InputStream s){
-        InputStreamReader isReader = new InputStreamReader(s);
-        BufferedReader reader = new BufferedReader(isReader);
-        StringBuffer sb = new StringBuffer();
-        String str;
-        while(true){
-            try {
-                if (!((str = reader.readLine())!= null)) break;
-            } catch (IOException e) {
-                throw new IllegalStateException();
-            }
-            sb.append(str);
-        }
-        return sb.toString();
-    }
+    private final String contextMenuObserver = """
+            ((() => {
+                        const mobserver = new MutationObserver(function (mutations) {
+                               var menuentry = document.querySelector('.action-menu-entry-text');
+                               if(menuentry)
+                                   jsbridge.onContextMenuItem(menuentry.innerText)
+                           });
+                           
+                        mobserver.observe(document.getElementById('hovercard'), {attributes: true, childList: true, subtree: true});
+                    }))();
+                    """;
+
 
 }
+

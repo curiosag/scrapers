@@ -1,6 +1,6 @@
 package google.maps.searchapi;
 
-import google.maps.Area;
+import google.maps.ScrapeArea;
 import google.maps.Point;
 import google.maps.dao.SearchDao;
 import google.maps.dao.RegionsDao;
@@ -64,7 +64,7 @@ public class Nearbysearch {
         RegionsDao rd = new RegionsDao();
 
         List<Point> boundaries = rd.getStateBoundaries("name0", state);
-        Area area = new Area(boundaries);
+        ScrapeArea area = new ScrapeArea(boundaries);
 
         if (boundaries.size() == 0) {
             System.out.println("no boundaries found for:" + state);

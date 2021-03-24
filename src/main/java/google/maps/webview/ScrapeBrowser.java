@@ -1,10 +1,9 @@
 package google.maps.webview;
 
-
 import boofcv.struct.feature.Match;
 import com.sun.javafx.webkit.WebConsoleListener;
-import google.maps.Area;
 import google.maps.Point;
+import google.maps.webview.scrapejob.ScrapeJob;
 import google.maps.extraction.ResultFileExtractor;
 import javafx.application.Platform;
 import javafx.embed.swing.SwingFXUtils;
@@ -30,12 +29,10 @@ import javafx.scene.web.WebView;
 import javax.imageio.ImageIO;
 import java.awt.image.BufferedImage;
 import java.io.File;
-import java.io.FileWriter;
 import java.io.IOException;
 import java.net.CookieHandler;
 import java.net.CookieManager;
 import java.net.CookiePolicy;
-import java.nio.charset.StandardCharsets;
 import java.nio.file.Files;
 import java.nio.file.Path;
 import java.nio.file.Paths;
@@ -69,13 +66,17 @@ class ScrapeBrowser extends Region {
 
     final Robot robot = new Robot();
 
-    private final Area searchArea;
+    private final ScrapeJob scrapeJob;
     private GrazingDirection grazingDirection = LEFT_TO_RIGHT;
     private AreaExceeded areaExceeded = AreaExceeded.NO;
 
     File templateImage = setupFileStuff();
-    private final ConditionalTimer timer = new ConditionalTimer(() -> !cancelled.get(), "mapops", true);
+    private final ConditionalTimer timer = new ConditionalTimer(() -> true, "mapops", true);
     private final static boolean clickEmptyAreaToElicitCoordinates = false;
+
+    public ScrapeBrowser(SetUp setUp) {
+        this(setUp.autorun, setUp.getScrapeJob(), setUp.zoom, setUp.getScrapeJob()::setCurrentPosition);
+    }
 
     private File setupFileStuff() {
         Path pMarkedImage = Paths.get(markedImagePath);
@@ -96,8 +97,8 @@ class ScrapeBrowser extends Region {
         return f;
     }
 
-    public ScrapeBrowser(boolean autorun, Area searchArea, Point startAt, float zoom, Consumer<Point> onCoordinateSeen) {
-        this.searchArea = searchArea;
+    private ScrapeBrowser(boolean autorun, ScrapeJob scrapeJob, float zoom, Consumer<Point> onCoordinateSeen) {
+        this.scrapeJob = scrapeJob;
         this.onCoordinateSeen = onCoordinateSeen;
 
         webView.setOnMouseMoved(this::onMouseMove);
@@ -122,26 +123,27 @@ class ScrapeBrowser extends Region {
 
         setupJsConsoleListener();
 
-String headerHack =
-        """
-        Mozilla/5.0 (X11; Linux x86_64; rv:78.0) Gecko/20100101 Firefox/78.0
-        Host: maps.google.com
-        Accept-Language: en-US,en;q=0.5
-        DNT: 1
-        Connection: keep-alive
-        Cookie: NID=211=VDSs6jAdTmj6I2bpYwRcyFusuy5SJ93O0BlyIyZvdmlrkz-N3vyN2vsKRE3Hj6BfgQRQ5ksLjcX852clDMFOYTpRujtg6gfwe7IufLMhB51B29mSGPkTn_xDoCqZW_BstWqWJmCMLb9Zdaq66bJHYeU8mF8hFEpJi8MrxRFH2cEhLhnZh6rstSlxXvf2KB1wYjy_aW1VEK24tgQRfG-HvrejIn_KsZyjiW2748DblcoQSP9aSDdd7VP6n1AmzYJoh6KWmYuHEJ5k4t2tOo1-nI-zwh5EDopyCVnMkzuozGCsBidpzVlgDu3LQvOu-NMCFhbfdDEhA0gPf6TjeS-Ym6mzYRI4hdIoFSAHOew8knVUhT2ZWIA; CONSENT=YES+AT.de+V13+BX+419; 1P_JAR=2021-03-22-09; ANID=AHWqTUm0u9zV9pz51Zr64JKbwH-0LZnHm2zqpMMNvhLIrrx575SaFX9tts4YnRLp; SID=7gfrnxO9mtwj7BqsQPFt8Wv3TDCw_smNT2dkHpiiGpLp0HGDLdBiM9_Cu5NAFgIH66KOBg.; __Secure-3PSID=7gfrnxO9mtwj7BqsQPFt8Wv3TDCw_smNT2dkHpiiGpLp0HGDp_2My0jsAFtoWtINHDnAew.; HSID=A2aDrFhoiH8qhT1_-; SSID=AiOKPxIRf03KeorOt; APISID=nfgl8v7vS_f3SfOA/AC28TtK4DWnnODnXU; SAPISID=kZz-Ozfu1e1h6gLM/APCTwk7yKwRNVw8W4; __Secure-3PAPISID=kZz-Ozfu1e1h6gLM/APCTwk7yKwRNVw8W4; SIDCC=AJi4QfExMyJfIMmB9oZFpWMPSZxgMtXPtgPYAI8wR_bvZSIk4MMPaz57tA_YyIXpnAJpRMBX1Ps; __Secure-3PSIDCC=AJi4QfGgDLX-z6WrQMF0Lz322ml_1NJUSu6DCWPnT_UVRssMIi6jCX3HsGP5vmme0HuCWk3qC44P
-        Upgrade-Insecure-Requests: 1
-        If-None-Match: 0c9562b543606ff2e
-        Cache-Control: max-age=0
-        TE: Trailers
-        """;
+        @SuppressWarnings("unused")
+        String headerHack =
+                """
+                        Mozilla/5.0 (X11; Linux x86_64; rv:78.0) Gecko/20100101 Firefox/78.0
+                        Host: maps.google.com
+                        Accept-Language: en-US,en;q=0.5
+                        DNT: 1
+                        Connection: keep-alive
+                        Upgrade-Insecure-Requests: 1
+                        If-None-Match: 0c9562b543606ff2e
+                        Cache-Control: max-age=0
+                        TE: Trailers
+                        """;
 
-        webEngine.setUserAgent("headerHack");
-        webEngine.load(getStartUrl(startAt, zoom));
+        //webEngine.setUserAgent(headerHack);
+
+        webEngine.load(getStartUrl(scrapeJob.getCurrentPosition(), zoom));
         maybeAutorun(autorun);
 
         jsbridge = new JsBridge(webEngine, this::onUrlSeen, (hu, ha) -> {
-        });
+        }, this::onContextMenuItem);
     }
 
     private void maybeAutorun(boolean autorun) {
@@ -157,36 +159,51 @@ String headerHack =
         return result;
     }
 
-    private final String logfile = "./grazelog.txt";
-    private int urls = 0;
-
-    private void onUrlSeen(String url) {
+    private void onContextMenuItem(String coords) {
         if (cancelled.get())
             return;
+
+        log(coords);
+
+        String[] parts = coords.split(",");
+        if (parts.length != 2)
+            throw new IllegalStateException();
+
+        double lat = Double.parseDouble(parts[0]);
+        double lon = Double.parseDouble(parts[1]);
+
+        Point p = new Point(lat, lon);
+        scrapeJob.setCurrentPosition(p);
+        if (scrapeJob.areaContains(p)) {
+            onCoordinateSeen.accept(p);
+            areaExceeded = AreaExceeded.NO;
+        } else {
+            areaExceeded = grazingDirection == LEFT_TO_RIGHT ? AreaExceeded.RIGHT : AreaExceeded.LEFT;
+            if (scrapeJob.exceedsSouth(p)) {
+                exitApplication(p);
+            }
+        }
+    }
+
+    private void onUrlSeen(String url) {
         if (url.startsWith("/maps/preview/") || url.startsWith("/maps/rpc/vp?")) {
             CoordExtractor.extract(url).ifPresent(p -> {
                 log(url);
-                if (searchArea.contains(p)) {
-                    onCoordinateSeen.accept(p);
-                    areaExceeded = AreaExceeded.NO;
-                } else {
-                    areaExceeded = grazingDirection == LEFT_TO_RIGHT ? AreaExceeded.RIGHT : AreaExceeded.LEFT;
-                    if (p.lat < searchArea.getSouthernMost().lat) {
-                        areaExceeded = AreaExceeded.SOUTH;
-                    }
-                    System.out.println("Area exceeded at " + p.toString());
-                }
             });
         }
     }
 
+    private void exitApplication(Point p) {
+        System.out.printf("Finished scrape job %d at %s\n", scrapeJob.id, p.toString());
+        Platform.exit();
+    }
+
     private void onKeyPressed(KeyEvent keyEvent) {
         if (keyEvent.isControlDown() && keyEvent.getCode() == KeyCode.C) {
-            Platform.exit();
-            System.exit(0);
+            exitApplication(scrapeJob.getCurrentPosition());
         }
         if (keyEvent.getCode() == KeyCode.ESCAPE) {
-            areaExceeded = AreaExceeded.SOUTH;
+            exitApplication(scrapeJob.getCurrentPosition());
         }
     }
 
@@ -208,8 +225,10 @@ String headerHack =
     private final ImageTemplateMatching imageTemplateMatching = new ImageTemplateMatching(null /*markedImagePath*/);
 
     private void graze(List<Point> locations) {
+        MemoryWatcher.watch(scrapeJob);
+
         if (!isDone() && !cancelled.get()) {
-            ScreenCoordinatesMap sc = new ScreenCoordinatesMap(webView);
+
             Runnable continueWith = () ->
                     moveMapHorizontally(() -> klickNcheckAreaExceeded(this::gatherLocationsAndGraze, this::moveSouth));
 
@@ -382,11 +401,4 @@ String headerHack =
         return new Point(p.lat + measures.screenOffsetX, p.lon + measures.screenOffsetY);
     }
 
-    private void appendToFile(String filename, String s) {
-        try (FileWriter w = new FileWriter(filename, StandardCharsets.UTF_8, true)) {
-            w.write(s);
-        } catch (IOException e) {
-            throw new RuntimeException(e);
-        }
-    }
 }

@@ -22,7 +22,7 @@ public class RegionsDao {
         try {
             ResultSet r = connection.createStatement().executeQuery(String.format(query, nameField, name));
             while (r.next()) {
-                result.add(fromGeomString(r.getString("geom")));
+                result.add(GeomUtil.fromGeomString(r.getString("geom")));
             }
             return result;
 
@@ -37,7 +37,7 @@ public class RegionsDao {
         try {
             ResultSet r = connection.createStatement().executeQuery(String.format(query, nameField, name));
             if (r.next()) {
-                List<Point> result = fromGeomString(r.getString("geom"));
+                List<Point> result = GeomUtil.fromGeomString(r.getString("geom"));
                 if(r.next())
                 {
                     throw new IllegalStateException("ambiguous result for " + name);
@@ -50,16 +50,4 @@ public class RegionsDao {
         return Collections.emptyList();
     }
 
-    private List<Point> fromGeomString(String geom) {
-        List<Point> points = new ArrayList<>();
-        String s0 = geom.replace("POLYGON((", "").replace("))", "");
-        for (String s : s0.split(",")) {
-            String[] lalo = s.split(" ");
-            if (lalo.length != 2) {
-                throw new IllegalStateException();
-            }
-            points.add(new Point(Double.parseDouble(lalo[0]), Double.parseDouble(lalo[1])));
-        }
-        return points;
-    }
 }
