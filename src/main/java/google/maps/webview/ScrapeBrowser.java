@@ -3,10 +3,10 @@ package google.maps.webview;
 import com.sun.javafx.webkit.WebConsoleListener;
 import google.maps.PixelCoordinate;
 import google.maps.Point;
+import google.maps.extraction.ResultFileExtractor;
 import google.maps.webview.markers.ImageTemplateMatching;
 import google.maps.webview.markers.MarkerDetector;
 import google.maps.webview.scrapejob.ScrapeJob;
-import google.maps.extraction.ResultFileExtractor;
 import javafx.application.Platform;
 import javafx.embed.swing.SwingFXUtils;
 import javafx.event.ActionEvent;
@@ -72,17 +72,16 @@ class ScrapeBrowser extends Region {
     private GrazingDirection grazingDirection = LEFT_TO_RIGHT;
     private AreaExceeded areaExceeded = AreaExceeded.NO;
 
-    File templateImage = setupFileStuff();
     private final ConditionalTimer timer = new ConditionalTimer(() -> true, "mapops", true);
     private final static boolean clickEmptyAreaToElicitCoordinates = false;
-    private SetUp.ImageMarkerProcessingType imageMarkerProcessingType = SetUp.ImageMarkerProcessingType.temple;
+    private MarkerProcessingType markerProcessingType = MarkerProcessingType.temple;
 
     public ScrapeBrowser(SetUp setUp) {
         this(setUp.autorun, setUp.getScrapeJob(), setUp.zoom, setUp.getScrapeJob()::setCurrentPosition);
-        imageMarkerProcessingType = setUp.imageMarkerProcessingType;
+        markerProcessingType = setUp.markerProcessingType;
     }
 
-    private File setupFileStuff() {
+    private void setupFileStuff() {
         Path pMarkedImage = Paths.get(markedImagePath);
         Path pResultFiles = Paths.get(ResultFileExtractor.resultFilePath);
         if (!Files.exists(pResultFiles))
@@ -93,15 +92,11 @@ class ScrapeBrowser extends Region {
             } catch (IOException e) {
                 throw new RuntimeException(e);
             }
-
-        File f = new File(templatePath);
-        if (!f.exists()) {
-            throw new IllegalStateException(templatePath + " doesn't exist");
-        }
-        return f;
     }
 
     private ScrapeBrowser(boolean autorun, ScrapeJob scrapeJob, float zoom, Consumer<Point> onCoordinateSeen) {
+        setupFileStuff();
+
         this.scrapeJob = scrapeJob;
         this.onCoordinateSeen = onCoordinateSeen;
 
@@ -126,12 +121,23 @@ class ScrapeBrowser extends Region {
         CookieHandler.setDefault(manager);
 
         setupJsConsoleListener();
+        Point p = scrapeJob.getCurrentPosition();
+        String url = String.format("https://www.google.com/maps/@%.7f,%.7f,%.2fz", p.lat, p.lon, zoom);
+        feedback(scrapeJob, url);
 
-        webEngine.load(getStartUrl(scrapeJob.getCurrentPosition(), zoom));
+        webEngine.load(url);
         maybeAutorun(autorun);
 
         jsbridge = new JsBridge(webEngine, this::onUrlSeen, (hu, ha) -> {
         }, this::onContextMenuItem);
+    }
+
+    private void feedback(ScrapeJob scrapeJob, String url) {
+        if (scrapeJob.id > 0) {
+            log(String.format("Scrape job id:%d at %s",
+                    scrapeJob.id, scrapeJob.getCurrentPosition()));
+        } else
+            log(url);
     }
 
     private void maybeAutorun(boolean autorun) {
@@ -139,12 +145,6 @@ class ScrapeBrowser extends Region {
             System.out.println("Starting to graze in 10 secs");
             schedule(this::startGrazing, 10000);
         }
-    }
-
-    private String getStartUrl(Point p, float zoom) {
-        var result = String.format("https://www.google.com/maps/@%.7f,%.7f,%.2fz", p.lat, p.lon, zoom);
-        log(result);
-        return result;
     }
 
     private String prevCoords = "";
@@ -205,7 +205,7 @@ class ScrapeBrowser extends Region {
 
     private void startGrazing() {
         areaExceeded = AreaExceeded.NO;
-        klickNcheckAreaExceeded(this::gatherLocationsAndGraze, () -> {
+        checkAreaExceeded(this::gatherLocationsAndGraze, () -> {
             throw new IllegalArgumentException("Initial area not within boundaries");
         });
     }
@@ -218,15 +218,13 @@ class ScrapeBrowser extends Region {
         if (!isDone() && !cancelled.get()) {
 
             Runnable continueWith = () ->
-                    moveMapHorizontally(() -> klickNcheckAreaExceeded(this::gatherLocationsAndGraze, this::moveSouth));
+                    moveMapHorizontally(() -> checkAreaExceeded(this::gatherLocationsAndGraze, this::moveSouth));
 
             new GrazingTimerTask(new ArrayDeque<>(locations), this::mouseMove, 500, continueWith, timer).run();
         }
     }
 
-    void klickNcheckAreaExceeded(Runnable continuedOnOk, Runnable continueOnFail) {
-
-        //forget klickcheck
+    void checkAreaExceeded(Runnable continuedOnOk, Runnable continueOnFail) {
         schedule(() -> {
             if (areaExceeded == AreaExceeded.NO) {
                 continuedOnOk.run();
@@ -241,7 +239,7 @@ class ScrapeBrowser extends Region {
             return;
 
         List<PixelCoordinate> locations;
-        switch (imageMarkerProcessingType) {
+        switch (markerProcessingType) {
             case temple -> {
                 locations = MarkerDetector.getTemples(saveScreenshotToFile(mapScreenshotPath));
             }
@@ -262,6 +260,7 @@ class ScrapeBrowser extends Region {
 
         graze(screenLocations);
     }
+
 
     private void moveMapHorizontally(Runnable next) {
         if (cancelled.get())
@@ -284,7 +283,7 @@ class ScrapeBrowser extends Region {
     private void reenterSearchArea() {
         // areaExceeded is set in onUrlSeen
         switch (areaExceeded) {
-            case RIGHT, LEFT -> moveMapHorizontally(() -> klickNcheckAreaExceeded(this::gatherLocationsAndGraze, this::reenterSearchArea));
+            case RIGHT, LEFT -> moveMapHorizontally(() -> checkAreaExceeded(this::gatherLocationsAndGraze, this::reenterSearchArea));
             case SOUTH -> {
             }
             case NO -> gatherLocationsAndGraze();

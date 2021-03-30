@@ -1,6 +1,5 @@
 package google.maps.webview.intercept;
 
-import google.maps.webview.PlaceDetailsWriter;
 import net.bytebuddy.ByteBuddy;
 import net.bytebuddy.description.type.TypeDescription;
 import net.bytebuddy.dynamic.ClassFileLocator;
@@ -21,11 +20,11 @@ import static net.bytebuddy.matcher.ElementMatchers.named;
 
 public class URLLoaderInterceptor {
 
-    static Function<URLConnection, Boolean> onSendRequest;
-    static Consumer<URLConnection> onDidReceiveResponse;
-    static Consumer<ByteBuffer> onDidReceiveData;
-    static Runnable onFinishedLoading;
-    private static PlaceDetailsWriter loader = new PlaceDetailsWriter();
+    public static Function<URLConnection, Boolean> onSendRequest;
+    public static Consumer<URLConnection> onDidReceiveResponse;
+    public static Consumer<ByteBuffer> onDidReceiveData;
+    public static Runnable onFinishedLoading;
+
 
     // https://stackoverflow.com/questions/39987414/delegate-private-method-in-bytebuddy-with-super-possible
     public static void didFinishLoading(@SuperCall Callable<Void> c) throws Exception {
@@ -87,23 +86,6 @@ public class URLLoaderInterceptor {
                 .make()
                 .load(urlloaderClassLoader, ClassReloadingStrategy.of(instrumentation));
 
-        onSendRequest = (c) -> {
-            if (c.getURL().toString().contains("/maps/preview/place")) {
-                loader.put(c.getURL().toString());
-                return false;
-            }
-            return true;
-        };
-
-        onDidReceiveData = (data) -> {
-            //collector.onData(data);
-        };
-        onFinishedLoading = () -> {
-            //collector.onComplete();
-        };
-        onDidReceiveResponse = (c) -> {
-            //collector.onResponse(c);
-        };
     }
 
 }

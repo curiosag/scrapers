@@ -7,7 +7,7 @@ import java.util.regex.Pattern;
 
 import google.maps.Point;
 
-public class CoordExtractor {
+public class UrlCoordExtractor {
 
     private final static String regex = ".*?!2d(-*[0-9.]*)!3d(-*[0-9.]*)";
 

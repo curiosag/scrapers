@@ -16,18 +16,23 @@ import static persistence.Common.createConnection;
 
 public class ScrapeJobDao implements ScrapeJobStore {
     private final Connection connection = createConnection(Const.connectionUrl, false);
+    private final String place_type;
+
+    public ScrapeJobDao(String place_type) {
+        this.place_type = place_type;
+    }
 
     @Override
     public Optional<ScrapeJob> getNext() {
         String query = """
                 select id, public.ST_AsText(area) as area, current_lat, current_lon, started from temple.scrape_job
-                where finished is null and busy=0 limit 1 for update
+                where place_type='%s' and finished is null and busy=0 limit 1 for update
                 """;
         String setBusy = "update temple.scrape_job set busy=1, started=CURRENT_TIMESTAMP where id=";
 
         try {
             try {
-                ResultSet r = connection.createStatement().executeQuery(query);
+                ResultSet r = connection.createStatement().executeQuery(String.format(query,place_type));
                 if (!r.next())
                     return Optional.empty();
 
@@ -81,7 +86,8 @@ public class ScrapeJobDao implements ScrapeJobStore {
 
     public boolean allDone() {
         try {
-            ResultSet r = connection.createStatement().executeQuery("select id from temple.scrape_job where finished is null");
+            String query = "select id from temple.scrape_job where finished is null and place_type='" + place_type+"'";
+            ResultSet r = connection.createStatement().executeQuery(query);
             r.next();
             r.getString("id");
             return r.wasNull();

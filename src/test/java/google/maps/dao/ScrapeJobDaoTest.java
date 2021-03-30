@@ -47,13 +47,13 @@ public class ScrapeJobDaoTest {
     @Test
     public void getNext_autoFinish() throws SQLException {
         execute("""
-                insert into temple.scrape_job (id, current_lat, current_lon, started, finished, clst_id, area) values (
+                insert into temple.scrape_job (id, current_lat, current_lon, started, finished, clst_id, area, place_type) values (
                 0, 0.1, 0.1, null, null, 1,
                 public.ST_GeomFromText('POLYGON((-71.1776585052917 42.3902909739571,-71.1776820268866 42.3903701743239,
-                -71.1776063012595 42.3903825660754,-71.1775826583081 42.3903033653531,-71.1776585052917 42.3902909739571))', 4326)
-                )
+                -71.1776063012595 42.3903825660754,-71.1775826583081 42.3903033653531,-71.1776585052917 42.3902909739571))', 4326),
+                'hindu_temple')
                 """);
-        ScrapeJobDao dao = new ScrapeJobDao();
+        ScrapeJobDao dao = new ScrapeJobDao("hindu_temple");
         Optional<ScrapeJob> next = dao.getNext();
         assertTrue(next.isPresent());
         assertEquals(0, next.get().id);
@@ -67,7 +67,6 @@ public class ScrapeJobDaoTest {
         exists("select count(1) as count from temple.scrape_job where current_lat < 0 and started is not null and finished is not null and busy = 0");
 
         assertFalse(dao.getNext().isPresent());
-
     }
 
     @Test
@@ -76,13 +75,13 @@ public class ScrapeJobDaoTest {
                 insert into temple.scrape_job (id, current_lat, current_lon, started, finished, clst_id, area) values (
                 1, 0.1, 0.1, null, null, 1,
                 public.ST_GeomFromText('POLYGON((-71.1776585052917 42.3902909739571,-71.1776820268866 42.3903701743239,
-                -71.1776063012595 42.3903825660754,-71.2775826583081 42.3903033653531,-71.1776585052917 42.3902909739571))', 4326)
-                )
+                -71.1776063012595 42.3903825660754,-71.2775826583081 42.3903033653531,-71.1776585052917 42.3902909739571))', 4326),
+                'hindu_temple')
                 """);
 
         exists("select count(1) as count from temple.scrape_job where busy = 0");
 
-        ScrapeJobDao dao = new ScrapeJobDao();
+        ScrapeJobDao dao = new ScrapeJobDao("hindu_temple");
         Optional<ScrapeJob> next = dao.getNext();
         assertTrue(next.isPresent());
         exists("select count(1) as count from temple.scrape_job where busy = 1");

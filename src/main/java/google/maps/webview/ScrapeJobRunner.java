@@ -29,7 +29,7 @@ public class ScrapeJobRunner {
     }
 
     public static void main(String[] args) {
-        ScrapeJobDao dao = new ScrapeJobDao();
+        ScrapeJobDao dao = new ScrapeJobDao("hindu_temple");
 
         while (!dao.allDone()) {
             runNext();
