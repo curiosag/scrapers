@@ -38,7 +38,7 @@ public class SetUp {
 
         String errorMsg = """
                 invalid number of arguments (should be 3 or 6): %d
-                3: zoom(a number)  autorun(or not) markerprocessing("temple" or "any")
+                3: zoom(a number)  autorun(or not) markerprocessing("marker_temple" or "any")
                 7: x1 y1 x2 y2 zoom autorun markerprocessing
                 """;
         switch (params.size()) {

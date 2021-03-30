@@ -21,7 +21,7 @@ public class ScrapeJobDao implements ScrapeJobStore {
     public Optional<ScrapeJob> getNext() {
         String query = """
                 select id, public.ST_AsText(area) as area, current_lat, current_lon, started from temple.scrape_job
-                where finished is null and busy=0 and id=567 limit 1 for update
+                where finished is null and busy=0 limit 1 for update
                 """;
         String setBusy = "update temple.scrape_job set busy=1, started=CURRENT_TIMESTAMP where id=";
 

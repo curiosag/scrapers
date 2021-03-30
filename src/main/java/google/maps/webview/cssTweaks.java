@@ -38,7 +38,6 @@ public class cssTweaks {
                 setTimeout(bla, 16000);
                 """;
         for (String s : classes) {
-            System.out.println(String.format(script, s));
             e.executeScript(String.format(script, s));
         }
     }
