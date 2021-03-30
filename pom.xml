@@ -13,6 +13,7 @@
         <java.version>15</java.version>
         <scala.version>2.12.6</scala.version>
         <manifestMainClass>google.maps.webview.Launcher</manifestMainClass>
+        <fatJarName>Launcher</fatJarName>
     </properties>
 
     <build>
@@ -87,6 +88,7 @@
                             <goal>single</goal>
                         </goals>
                         <configuration>
+                            <finalName>${fatJarName}</finalName>
                             <archive>
                                 <manifest>
                                     <mainClass>${manifestMainClass}</mainClass>

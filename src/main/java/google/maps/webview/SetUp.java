@@ -16,9 +16,14 @@ import static google.maps.webview.Log.log;
 
 public class SetUp {
 
+    public enum ImageMarkerProcessingType {
+        temple, any
+    }
+
     public final boolean autorun;
     public int zoom;
     private ScrapeJob scrapeJob;
+    public final ImageMarkerProcessingType imageMarkerProcessingType;
 
     public SetUp(List<String> params) {
         log("parameters received: " + params);
@@ -27,10 +32,19 @@ public class SetUp {
             throw new IllegalArgumentException("No params passed");
 
         autorun = params.contains("autorun");
+        imageMarkerProcessingType = params.contains("marker_temple") ?
+                ImageMarkerProcessingType.temple :
+                ImageMarkerProcessingType.any;
+
+        String errorMsg = """
+                invalid number of arguments (should be 3 or 6): %d
+                3: zoom(a number)  autorun(or not) markerprocessing("temple" or "any")
+                7: x1 y1 x2 y2 zoom autorun markerprocessing
+                """;
         switch (params.size()) {
-            case 1 -> setupDbJobStore(params);
-            case 5 -> setupFromParams(params);
-            default -> throw new IllegalArgumentException("invalid number of arguments (should be 1 or 5): " + params.size());
+            case 3 -> setupDbJobStore(params);
+            case 7 -> setupFromParams(params);
+            default -> throw new IllegalArgumentException(errorMsg + params.size());
         }
     }
 
@@ -44,7 +58,7 @@ public class SetUp {
     private void setupDbJobStore(List<String> params) {
         zoom = Integer.parseInt(params.get(0));
         Optional<ScrapeJob> next = new ScrapeJobDao().getNext();
-        if(next.isPresent())
+        if (next.isPresent())
             scrapeJob = next.get();
         else
             System.exit(-1);

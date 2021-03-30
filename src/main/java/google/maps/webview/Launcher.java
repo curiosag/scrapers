@@ -3,6 +3,7 @@ package google.maps.webview;
 import google.maps.webview.intercept.URLLoaderInterceptor;
 
 import java.lang.instrument.Instrumentation;
+import java.util.Arrays;
 import java.util.Enumeration;
 import java.util.Iterator;
 import java.util.logging.ConsoleHandler;
@@ -13,8 +14,25 @@ import java.util.logging.Logger;
 public class Launcher {
 
     public static void main(String[] args) throws Exception {
-        ScraperApplication.main(args);
-        System.exit(0);
+        try {
+            if (Arrays.asList(args).contains("headless")) {
+                //setHeadless();
+            }
+            ScraperApplication.main(args);
+            System.exit(0);
+        } catch (Exception e) {
+            System.out.println("Scraper died from: " + e.getMessage());
+            e.printStackTrace();
+            System.exit(1);
+        }
+    }
+
+    private static void setHeadless() {
+        System.setProperty("testfx.robot", "glass");
+        System.setProperty("testfx.headless", "true");
+        System.setProperty("prism.order", "sw");
+        System.setProperty("prism.text", "t2k");
+        System.setProperty("java.awt.headless", "true");
     }
 
     // to trigger pass jvm parameter: -javaagent:<path to byte-buddy-agent.jar>

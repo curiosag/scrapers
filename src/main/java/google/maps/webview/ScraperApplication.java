@@ -22,6 +22,7 @@ public class ScraperApplication extends Application {
         stage.setTitle("maps");
         setUp = new SetUp(getParameters().getRaw());
         ScrapeBrowser scrapeBrowser = new ScrapeBrowser(setUp);
+
         stage.setScene(new Scene(scrapeBrowser, 1910, 900, Color.web("#666970")));
         stage.show();
     }

@@ -8,6 +8,7 @@ import java.awt.image.BufferedImage;
 import java.util.List;
 import java.util.stream.Collectors;
 
+import static google.maps.tiles.TilePixelSequenceExtractor.getPixelSequences;
 import static org.junit.Assert.assertEquals;
 
 public class MarkerDetectorTest {
@@ -24,7 +25,7 @@ public class MarkerDetectorTest {
     public void getMarkerPixelCoordinates1() {
         Tile[][] tiles = new Tile[1][1];
         tiles[0][0] = getTile("markermatching_five_0_0.png");
-        List<PixelCoordinate> coordinates = MarkerDetector.getMarkerPixelCoordinates(tiles);
+        List<PixelCoordinate> coordinates = MarkerDetector.getMarkerPixelCoordinates(getPixelSequences(tiles));
         assertEquals(5, coordinates.size());
     }
 
@@ -38,7 +39,7 @@ public class MarkerDetectorTest {
         tiles[1][0] = getTile("markermatching_0_1.png");
         tiles[1][1] = getTile("markermatching_1_1.png");
 
-        List<PixelCoordinate> coordinates = MarkerDetector.getMarkerPixelCoordinates(tiles);
+        List<PixelCoordinate> coordinates = MarkerDetector.getMarkerPixelCoordinates(getPixelSequences(tiles));
         assertEquals(1, coordinates.size());
     }
 
@@ -46,7 +47,7 @@ public class MarkerDetectorTest {
     public void getPixelSequences1() {
         Tile[][] tiles = new Tile[1][1];
         tiles[0][0] = getTile("colors_and_matches_0_0.png");
-        List<List<PixelSequence>> sequences = MarkerDetector.getPixelSequences(tiles);
+        List<List<PixelSequence>> sequences = getPixelSequences(tiles);
         assertEquals(4, sequences.get(0).size());
         assertEquals(0, sequences.get(1).size());
         assertEquals(1, sequences.get(2).size());
@@ -67,7 +68,7 @@ public class MarkerDetectorTest {
         tiles[1][0] = getTile("pixelsequence_0_1.png");
         tiles[1][1] = getTile("pixelsequence_1_1.png");
 
-        List<List<PixelSequence>> sequences = MarkerDetector.getPixelSequences(tiles);
+        List<List<PixelSequence>> sequences = getPixelSequences(tiles);
         assertEquals(3, sequences.get(0).size());
         assertEquals(0, sequences.get(1).size());
         assertEquals(2, sequences.get(2).size());
@@ -92,7 +93,7 @@ public class MarkerDetectorTest {
     public void analyze_cultural_and_religious() {
         Tile[][] tiles = new Tile[1][1];
         tiles[0][0] = getTile("m_tile_23541_15211.png");
-        List<PixelCoordinate> coordinates = MarkerDetector.getMarkerPixelCoordinates(tiles);
+        List<PixelCoordinate> coordinates = MarkerDetector.getMarkerPixelCoordinates(getPixelSequences(tiles));
         assertEquals(2, coordinates.size());
         assertEquals(60265, coordinates.get(0).x / 100);
         assertEquals(60265, coordinates.get(1).x / 100);
@@ -109,7 +110,7 @@ public class MarkerDetectorTest {
         tiles[1][0] = getTile("lowerleft_23548_15210.png");
         tiles[1][1] = getTile("lowerright_23549_15210.png");
 
-        List<PixelCoordinate> coordinates = MarkerDetector.getMarkerPixelCoordinates(tiles)
+        List<PixelCoordinate> coordinates = MarkerDetector.getMarkerPixelCoordinates(getPixelSequences(tiles))
                 .stream().map(c -> new PixelCoordinate(c.x % 256, c.y % 256))
                 .collect(Collectors.toList());
 

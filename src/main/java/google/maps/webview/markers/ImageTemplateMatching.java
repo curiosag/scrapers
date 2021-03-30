@@ -1,4 +1,4 @@
-package google.maps.webview;
+package google.maps.webview.markers;
 
 import boofcv.alg.feature.detect.template.TemplateMatching;
 import boofcv.factory.feature.detect.template.FactoryTemplateMatching;
@@ -7,6 +7,7 @@ import boofcv.io.image.ConvertBufferedImage;
 import boofcv.io.image.UtilImageIO;
 import boofcv.struct.feature.Match;
 import boofcv.struct.image.GrayF32;
+import google.maps.PixelCoordinate;
 
 import java.awt.*;
 import java.awt.image.BufferedImage;
@@ -35,7 +36,7 @@ public class ImageTemplateMatching {
 
     }
 
-    public List<Match> getTemplateLocations(File templateFile, File imageFile) {
+    public List<PixelCoordinate> getTemplateLocations(File templateFile, File imageFile) {
         GrayF32 template = UtilImageIO.loadImage(templateFile, true, SB_F32);
         GrayF32 image = UtilImageIO.loadImage(imageFile, true, SB_F32);
 
@@ -46,7 +47,7 @@ public class ImageTemplateMatching {
         if (pathMarkedResultImages != null) {
             storeMarkedResultImage(pathMarkedResultImages, template, image, matches);
         }
-        return matches;
+        return matches.stream().map(m -> new PixelCoordinate(m.x, m.y)).collect(Collectors.toList());
     }
 
     private void storeMarkedResultImage(String pathMarkedResultImages, GrayF32 template, GrayF32 image, List<Match> matches) {

@@ -16,6 +16,7 @@ import java.util.concurrent.TimeUnit;
 import java.util.stream.Collectors;
 
 import static google.maps.tiles.MarkerDetector.getMarkerPixelCoordinates;
+import static google.maps.tiles.TilePixelSequenceExtractor.getPixelSequences;
 
 public class TileScraper {
 
@@ -40,7 +41,7 @@ public class TileScraper {
         int maxX = Integer.parseInt(args[2]);
         int maxY = Integer.parseInt(args[3]);
         int zoom = Integer.parseInt(args[4]);
-        new TileScraper(minX, minY, maxX, maxY, zoom, 10, new FastScanDao()).run();
+        new TileScraper(minX, minY, maxX, maxY, zoom, 10, new TileScrapeFileWriter("./tilescan.sql")).run();
     }
 
     public TileScraper(int minX, int minY, int maxX, int maxY, int zoom, int squareSize, TileScrapeWriter writer) {
@@ -74,7 +75,7 @@ public class TileScraper {
             int x = minX;
             while (x <= maxX) {
 
-                if(y > 13718 || (y == 13718 && x > 24166)) {
+                if(true || y > 13718 || (y == 13718 && x > 24166)) {
                     Optional<Tile[][]> square = fetcher.fetchTiles(x, y);
                     if (square.isEmpty())
                         break;
@@ -104,7 +105,8 @@ public class TileScraper {
     }
 
     private void processTiles(int squareX, int squareY, Tile[][] square) {
-        List<PixelCoordinate> markerPixelCoordinates = getMarkerPixelCoordinates(square);
+        List<List<PixelSequence>> sequences = getPixelSequences(square);
+        List<PixelCoordinate> markerPixelCoordinates = getMarkerPixelCoordinates(sequences);
         List<Point> coordinates = markerPixelCoordinates.stream()
                 .map(i -> MercatorProjection.unproject(i.x, i.y, zoom))
                 .collect(Collectors.toList());

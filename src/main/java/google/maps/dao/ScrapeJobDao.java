@@ -21,7 +21,7 @@ public class ScrapeJobDao implements ScrapeJobStore {
     public Optional<ScrapeJob> getNext() {
         String query = """
                 select id, public.ST_AsText(area) as area, current_lat, current_lon, started from temple.scrape_job
-                where finished is null and busy=0 limit 1 for update
+                where finished is null and busy=0 and id=567 limit 1 for update
                 """;
         String setBusy = "update temple.scrape_job set busy=1, started=CURRENT_TIMESTAMP where id=";
 
@@ -38,10 +38,9 @@ public class ScrapeJobDao implements ScrapeJobStore {
 
                 double clat = r.getDouble("current_lat");
                 double clon = r.getDouble("current_lon");
-                if(r.getInt("current_lat") == 0)
-                {
+                if (r.getInt("current_lat") == 0) {
                     Point north = getApexNorth(area.getBoundary());
-                    clat =  north.getLatitude() - 0.0001; // enter area
+                    clat = north.getLatitude() - 0.0001; // enter area
                     clon = north.getLongitude();
                 }
 
@@ -79,4 +78,16 @@ public class ScrapeJobDao implements ScrapeJobStore {
             throw new RuntimeException(e);
         }
     }
+
+    public boolean allDone() {
+        try {
+            ResultSet r = connection.createStatement().executeQuery("select id from temple.scrape_job where finished is null");
+            r.next();
+            r.getString("id");
+            return r.wasNull();
+        } catch (SQLException e) {
+            throw new RuntimeException(e);
+        }
+    }
+
 }

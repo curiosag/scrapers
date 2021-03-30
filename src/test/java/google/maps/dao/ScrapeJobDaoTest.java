@@ -87,7 +87,7 @@ public class ScrapeJobDaoTest {
         assertTrue(next.isPresent());
         exists("select count(1) as count from temple.scrape_job where busy = 1");
 
-        assertFalse(next.get().isDone()); // only work because polygon here is tweaked to -71.2775826583081
+        assertFalse(next.get().isDone()); // only works because polygon here is tweaked to -71.2775826583081
         next.get().release();
 
         exists("select count(1) as count from temple.scrape_job where busy = 0");

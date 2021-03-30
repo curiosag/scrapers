@@ -43,7 +43,6 @@ public class ResultFileExtractor {
         }
     }
 
-
     private static void extractToFile(String inputPath, String outputFileName, Function<PlaceSearchResultItem, String> outputGenerator) {
         final int[] count = new int[1];
         char del = 8;

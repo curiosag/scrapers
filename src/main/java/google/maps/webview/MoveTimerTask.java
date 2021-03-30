@@ -58,7 +58,11 @@ public class MoveTimerTask extends TimerTask {
             Platform.runLater(() -> {
                 robot.mouseRelease(MouseButton.PRIMARY);
             });
-            triggerContextMenu(onMoved);
+            if (startX != endX) {
+                triggerContextMenu(onMoved);
+            } else {
+                onMoved.run();
+            }
         }
     }
 
@@ -84,6 +88,9 @@ public class MoveTimerTask extends TimerTask {
         List<Delayable> tasks = List.of(
                 new Delayable(100, () -> robot.mousePress(MouseButton.SECONDARY)),
                 new Delayable(100, () -> robot.mouseRelease(MouseButton.SECONDARY)),
+                new Delayable(1000, () -> robot.mouseMove(x + (deltaX > 0 ? -30 : 30), y + 5)),
+                new Delayable(100, () -> robot.mousePress(MouseButton.PRIMARY)),
+                new Delayable(100, () -> robot.mouseRelease(MouseButton.PRIMARY)),
                 new Delayable(100, andThen));
 
         schedule(tasks);

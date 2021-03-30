@@ -1,6 +1,7 @@
 package google.maps.webview;
 
-import boofcv.struct.feature.Match;
+import google.maps.PixelCoordinate;
+import google.maps.webview.markers.ImageTemplateMatching;
 import org.junit.Test;
 
 import java.io.File;
@@ -18,7 +19,7 @@ public class ImageTemplateMatchingTest {
         File template = new File("/home/ssmertnig/dev/repo/scrapers/src/test/resources/om.png");
         File image = new File("/home/ssmertnig/dev/repo/scrapers/src/test/resources/testimage.png");
 
-        List<Match> locations = new ImageTemplateMatching(markedImagePath)
+        List<PixelCoordinate> locations = new ImageTemplateMatching(markedImagePath)
                 .getTemplateLocations(template, image);
         assertEquals(2, locations.size());
     }

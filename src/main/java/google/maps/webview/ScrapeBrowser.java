@@ -1,8 +1,10 @@
 package google.maps.webview;
 
-import boofcv.struct.feature.Match;
 import com.sun.javafx.webkit.WebConsoleListener;
+import google.maps.PixelCoordinate;
 import google.maps.Point;
+import google.maps.webview.markers.ImageTemplateMatching;
+import google.maps.webview.markers.MarkerDetector;
 import google.maps.webview.scrapejob.ScrapeJob;
 import google.maps.extraction.ResultFileExtractor;
 import javafx.application.Platform;
@@ -73,9 +75,11 @@ class ScrapeBrowser extends Region {
     File templateImage = setupFileStuff();
     private final ConditionalTimer timer = new ConditionalTimer(() -> true, "mapops", true);
     private final static boolean clickEmptyAreaToElicitCoordinates = false;
+    private SetUp.ImageMarkerProcessingType imageMarkerProcessingType = SetUp.ImageMarkerProcessingType.temple;
 
     public ScrapeBrowser(SetUp setUp) {
         this(setUp.autorun, setUp.getScrapeJob(), setUp.zoom, setUp.getScrapeJob()::setCurrentPosition);
+        imageMarkerProcessingType = setUp.imageMarkerProcessingType;
     }
 
     private File setupFileStuff() {
@@ -123,22 +127,6 @@ class ScrapeBrowser extends Region {
 
         setupJsConsoleListener();
 
-        @SuppressWarnings("unused")
-        String headerHack =
-                """
-                        Mozilla/5.0 (X11; Linux x86_64; rv:78.0) Gecko/20100101 Firefox/78.0
-                        Host: maps.google.com
-                        Accept-Language: en-US,en;q=0.5
-                        DNT: 1
-                        Connection: keep-alive
-                        Upgrade-Insecure-Requests: 1
-                        If-None-Match: 0c9562b543606ff2e
-                        Cache-Control: max-age=0
-                        TE: Trailers
-                        """;
-
-        //webEngine.setUserAgent(headerHack);
-
         webEngine.load(getStartUrl(scrapeJob.getCurrentPosition(), zoom));
         maybeAutorun(autorun);
 
@@ -159,11 +147,16 @@ class ScrapeBrowser extends Region {
         return result;
     }
 
+    private String prevCoords = "";
+
     private void onContextMenuItem(String coords) {
         if (cancelled.get())
             return;
 
-        log(coords);
+        if (!coords.equals(prevCoords)) {
+            log(coords);
+            prevCoords = coords;
+        }
 
         String[] parts = coords.split(",");
         if (parts.length != 2)
@@ -186,11 +179,6 @@ class ScrapeBrowser extends Region {
     }
 
     private void onUrlSeen(String url) {
-        if (url.startsWith("/maps/preview/") || url.startsWith("/maps/rpc/vp?")) {
-            CoordExtractor.extract(url).ifPresent(p -> {
-                log(url);
-            });
-        }
     }
 
     private void exitApplication(Point p) {
@@ -237,16 +225,8 @@ class ScrapeBrowser extends Region {
     }
 
     void klickNcheckAreaExceeded(Runnable continuedOnOk, Runnable continueOnFail) {
-        Image image = saveScreenshotToFile(mapScreenshotPath);
-        if (clickEmptyAreaToElicitCoordinates) {
-            EmptyAreaDetector.getEmptyKlickableLocation(image).ifPresent(l -> Platform.runLater(() -> {
-                MapScreenMeasures measures = new MapScreenMeasures(webView);
-                Point p = toScreenCoordinates(l, measures);
-                mouseClick((float) p.lon, (float) p.lat);
-            }));
-        }
-        // "check" is done onUrlSeen(), capturing the coordinates in the request triggered by mouseClick
-        // so schedule needs to be delayed a bit
+
+        //forget klickcheck
         schedule(() -> {
             if (areaExceeded == AreaExceeded.NO) {
                 continuedOnOk.run();
@@ -256,18 +236,26 @@ class ScrapeBrowser extends Region {
         }, 500);
     }
 
-    @SuppressWarnings("SimplifiableConditionalExpression")
     private void gatherLocationsAndGraze() {
         if (cancelled.get())
             return;
-        saveScreenshotToFile(mapScreenshotPath);
-        List<Match> locations = imageTemplateMatching.getTemplateLocations(templateImage, new File(mapScreenshotPath));
+
+        List<PixelCoordinate> locations;
+        switch (imageMarkerProcessingType) {
+            case temple -> {
+                locations = MarkerDetector.getTemples(saveScreenshotToFile(mapScreenshotPath));
+            }
+            case any -> {
+                BufferedImage image = saveScreenshotToFile(mapScreenshotPath);
+                locations = MarkerDetector.getMarkerPixelCoordinates(image);
+            }
+            default -> throw new IllegalStateException();
+        }
 
         MapScreenMeasures measures = new MapScreenMeasures(webView);
 
-        // only half of the map can be grazed, because the other half may still be loading
         List<Point> screenLocations = locations.stream()
-                .filter(l -> grazingDirection == LEFT_TO_RIGHT ? l.x < measures.mapCenterX : l.x >= measures.mapCenterX)
+                .filter(l -> grazingDirection == LEFT_TO_RIGHT ? l.x < measures.mapCenterX + 20 : l.x >= measures.mapCenterX - 20)
                 .filter(l -> l.x >= ScreenCoordinatesMap.offsetX)
                 .map(l -> toScreenCoordinates(l, measures))
                 .collect(Collectors.toList());
@@ -363,7 +351,7 @@ class ScrapeBrowser extends Region {
     }
 
     @SuppressWarnings("SameParameterValue")
-    private Image saveScreenshotToFile(String capturedImagePath) {
+    private BufferedImage saveScreenshotToFile(String capturedImagePath) {
         //SnapshotParameters params = new SnapshotParameters();
         //params.setViewport(new Rectangle2D(mapOffset, 0, (w - mapOffset) / 2, h));
         // SnapshotParameters.viewport lead to frequent ArrayOutOfBoundsExceptions in image detection
@@ -374,7 +362,7 @@ class ScrapeBrowser extends Region {
         } catch (IOException e) {
             throw new RuntimeException(e);
         }
-        return image;
+        return bi;
     }
 
     private void schedule(Runnable r, long delay) {
@@ -393,7 +381,7 @@ class ScrapeBrowser extends Region {
         return cancelled.get() || areaExceeded == AreaExceeded.SOUTH;
     }
 
-    private Point toScreenCoordinates(Match m, MapScreenMeasures measures) {
+    private Point toScreenCoordinates(PixelCoordinate m, MapScreenMeasures measures) {
         return new Point(m.x + measures.screenOffsetX, m.y + measures.screenOffsetY);
     }
 
