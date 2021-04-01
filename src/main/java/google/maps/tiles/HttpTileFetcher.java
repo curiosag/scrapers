@@ -17,7 +17,7 @@ public class HttpTileFetcher implements SingleTileFetcher {
     public Tile fetchTile(int x, int y, int zoom) {
         for (int retries = 0; retries < HttpTileFetcher.maxRetries; retries++) {
             try {
-                return new Tile(x, y, zoom, getImageByUrl(String.format(HttpTileFetcher.urlPattern, zoom, x, y), timeoutPerTry, proxy));
+                return new Tile(x, y, zoom, getImageByUrl(String.format(HttpTileFetcher.urlPattern, zoom, x, y), timeoutPerTry, null));
             } catch (IOException e) {
                 System.out.println(e.getMessage() + " fetching " + String.format(HttpTileFetcher.urlPattern, zoom, x, y));
                 retries++;
@@ -32,7 +32,5 @@ public class HttpTileFetcher implements SingleTileFetcher {
         Path resourceDirectory = Paths.get("src", "test", "resources");
         return resourceDirectory.toFile().getAbsolutePath();
     }
-
-
 
 }

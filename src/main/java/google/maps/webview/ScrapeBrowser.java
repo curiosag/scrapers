@@ -4,7 +4,6 @@ import com.sun.javafx.webkit.WebConsoleListener;
 import google.maps.PixelCoordinate;
 import google.maps.Point;
 import google.maps.extraction.ResultFileExtractor;
-import google.maps.webview.markers.ImageTemplateMatching;
 import google.maps.webview.markers.MarkerDetector;
 import google.maps.webview.scrapejob.ScrapeJob;
 import javafx.application.Platform;
@@ -38,9 +37,7 @@ import java.net.CookiePolicy;
 import java.nio.file.Files;
 import java.nio.file.Path;
 import java.nio.file.Paths;
-import java.util.ArrayDeque;
-import java.util.List;
-import java.util.TimerTask;
+import java.util.*;
 import java.util.concurrent.atomic.AtomicBoolean;
 import java.util.function.Consumer;
 import java.util.stream.Collectors;
@@ -48,6 +45,7 @@ import java.util.stream.Collectors;
 import static google.maps.webview.GrazingDirection.LEFT_TO_RIGHT;
 import static google.maps.webview.GrazingDirection.RIGHT_TO_LEFT;
 import static google.maps.webview.Log.log;
+import static google.maps.webview.ScanChunkifyer.chunkify;
 
 class ScrapeBrowser extends Region {
     final JsBridge jsbridge;
@@ -210,8 +208,6 @@ class ScrapeBrowser extends Region {
         });
     }
 
-    private final ImageTemplateMatching imageTemplateMatching = new ImageTemplateMatching(null /*markedImagePath*/);
-
     private void graze(List<Point> locations) {
         MemoryWatcher.watch(scrapeJob);
 
@@ -245,7 +241,7 @@ class ScrapeBrowser extends Region {
             }
             case any -> {
                 BufferedImage image = saveScreenshotToFile(mapScreenshotPath);
-                locations = MarkerDetector.getMarkerPixelCoordinates(image);
+                locations = chunkify(MarkerDetector.getMarkerPixelCoordinates(image));
             }
             default -> throw new IllegalStateException();
         }
@@ -260,7 +256,6 @@ class ScrapeBrowser extends Region {
 
         graze(screenLocations);
     }
-
 
     private void moveMapHorizontally(Runnable next) {
         if (cancelled.get())

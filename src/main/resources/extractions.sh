@@ -1,5 +1,9 @@
 psql PhHhSka85GT6
 
+cat scanned_coordinates.csv | awk -F ';' '{print "INSERT INTO fast_scan_lola_place (scan, geom) values (1, ST_GeomFromText(\x27POINT("$1" "$2")\x27));"}'
+
+
+
 cat UncategorizedIndia.csv | awk -vFPAT='([^,]*)|("[^"]+")' -vOFS=, '{print "     INSERT INTO places_staging (name, deity, vicinity, geom) values (\x27"$1"\x27,\x27"$3"\x27,\x27"$2"\x27, ST_GeomFromText(\x27POINT("$6" "$7")\x27));"}' | sed "s/\"//g" >uc.sql
 
 cat SriLankaWithDeities.csv | sed "s/|/\//g" | awk -vFPAT='([^,]*)|("[^"]+")' -vOFS=, '{gsub(/\,/, ".", $5);gsub(/\,/, ".", $6);print $1 "|" $2  "|"  $4  "|"  $5  "|"  $6}' | sed "s/\"//g" | sed -E "s/([a-zA-z0-9]+)'([a-zA-z0-9]+)/\1''\2/g" >SL_pipe.csv

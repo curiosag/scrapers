@@ -6,13 +6,10 @@
 # autorun ... starts scraping with 10 secs delay to give the headless browser the possibility to completeley load the page
 
 
-while [ $? -eq 0 ]
-do
-
- # Xvfb :99 &>/dev/null &
- # export DISPLAY=:99
+Xvfb :99 &>/dev/null &
+export DISPLAY=:99
 
 
-  /opt/jdk-15/bin/java -jar --enable-preview -javaagent:/home/ssmertnig/dev/repo/scrapers/target/scrapers-1.0-SNAPSHOT.jar /home/ssmertnig/dev/repo/scrapers/target/Launcher-jar-with-dependencies.jar 18 autorun > run.log
-done
+/opt/jdk-15/bin/java -jar --enable-preview -javaagent:/home/ssmertnig/dev/repo/scrapers/target/scrapers-1.0-SNAPSHOT.jar /home/ssmertnig/dev/repo/scrapers/target/Launcher-jar-with-dependencies.jar 15 autorun any >> scanner.log
+
 

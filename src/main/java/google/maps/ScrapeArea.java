@@ -3,6 +3,7 @@ package google.maps;
 import org.locationtech.jts.geom.Coordinate;
 import org.locationtech.jts.geom.GeometryFactory;
 import org.locationtech.jts.geom.Polygon;
+import org.locationtech.jts.geom.impl.CoordinateArraySequence;
 
 import java.util.Comparator;
 import java.util.List;
@@ -48,8 +49,8 @@ public class ScrapeArea {
         if (geo == null) {
             setupGeo();
         }
-
-        return geo.contains(new org.locationtech.jts.geom.Point(new Coordinate(p.lat, p.lon), geoFactory.getPrecisionModel(), geoFactory.getSRID()));
+        Coordinate[] point= {new Coordinate(p.lat, p.lon)};
+        return geo.contains(new org.locationtech.jts.geom.Point(new CoordinateArraySequence(point), geoFactory));
     }
 
     private void setupGeo() {

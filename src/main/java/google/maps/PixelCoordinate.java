@@ -23,4 +23,12 @@ public class PixelCoordinate {
     public int hashCode() {
         return Objects.hash(x, y);
     }
+
+    @Override
+    public String toString() {
+        return "PixelCoordinate{" +
+                "x=" + x +
+                ", y=" + y +
+                '}';
+    }
 }
