@@ -1,5 +1,5 @@
 package google.maps.webview;
 
 public enum AreaExceeded {
-    RIGHT, LEFT, SOUTH, NO
+    RIGHT, LEFT, NORTH, SOUTH, NO
 }

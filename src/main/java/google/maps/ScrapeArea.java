@@ -1,10 +1,10 @@
 package google.maps;
 
-import org.locationtech.jts.geom.Coordinate;
-import org.locationtech.jts.geom.GeometryFactory;
-import org.locationtech.jts.geom.Polygon;
+import google.maps.webview.AreaExceeded;
+import org.locationtech.jts.geom.*;
 import org.locationtech.jts.geom.impl.CoordinateArraySequence;
 
+import java.util.Arrays;
 import java.util.Comparator;
 import java.util.List;
 
@@ -12,19 +12,26 @@ public class ScrapeArea {
 
     private final List<Point> boundary;
     private Point southernMost;
+    private Point northernMost;
 
     private GeometryFactory geoFactory;
     private Polygon geo;
 
-    public Point getSouthernMost(){
-        if(southernMost == null)
-        {
+    public Point getSouthernMost() {
+        if (southernMost == null) {
             southernMost = getApexSouth(boundary);
         }
         return southernMost;
     }
 
-    public boolean exceedsSouth(Point p){
+    public Point getNorthernMost() {
+        if (northernMost == null) {
+            northernMost = getApexNorth(boundary);
+        }
+        return northernMost;
+    }
+
+    public boolean exceedsSouth(Point p) {
         return p.lat < getSouthernMost().lat;
     }
 
@@ -49,8 +56,30 @@ public class ScrapeArea {
         if (geo == null) {
             setupGeo();
         }
-        Coordinate[] point= {new Coordinate(p.lat, p.lon)};
+        Coordinate[] point = {new Coordinate(p.lat, p.lon)};
+
         return geo.contains(new org.locationtech.jts.geom.Point(new CoordinateArraySequence(point), geoFactory));
+    }
+
+    public AreaExceeded exceeded(Point p) {
+        if (geo == null) {
+            setupGeo();
+        }
+
+        Coordinate[] linePoints = {new Coordinate( p.lat, p.lon - 30), new Coordinate( p.lat, p.lon + 30)};
+        LineString line = new LineString(new CoordinateArraySequence(linePoints), geoFactory);
+        List<Coordinate> intersection = Arrays.asList(geo.intersection(line).getCoordinates());
+        if (intersection.size() > 0) {
+            if (intersection.stream().allMatch(c -> c.y < p.lon))
+                return AreaExceeded.RIGHT;
+            if (intersection.stream().allMatch(c -> c.y > p.lon))
+                return AreaExceeded.LEFT;
+        }
+        if (exceedsSouth(p))
+            return AreaExceeded.SOUTH;
+        if (p.lat > getNorthernMost().lat)
+            return AreaExceeded.NORTH;
+        return AreaExceeded.NO;
     }
 
     private void setupGeo() {
