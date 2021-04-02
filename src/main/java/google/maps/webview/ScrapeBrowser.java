@@ -288,10 +288,12 @@ class ScrapeBrowser extends Region {
             case LEFT -> LEFT_TO_RIGHT;
             default -> throw new IllegalStateException();
         };
-        System.out.println("turned around " + grazingDirection + " at " + scrapeJob.getCurrentPosition());
+        // after a turn we could end up here repeatedly until search are has been re-entered.
+        // only move south once
         if (lastGrazingDirection != grazingDirection) {
             lastGrazingDirection = grazingDirection;
             moveSouth(() -> schedule(this::gatherLocationsAndGraze, 1500));
+            System.out.println("turned around " + grazingDirection + " at " + scrapeJob.getCurrentPosition());
         } else {
             schedule(this::gatherLocationsAndGraze, 1500);
         }

@@ -1,12 +1,12 @@
 <?xml version="1.0" encoding="UTF-8"?>
 <project version="4">
   <component name="DataSourceManagerImpl" format="xml" multifile-model="true">
-    <data-source source="LOCAL" name="temple@185.128.244.228" uuid="792d73c1-f57b-4946-a9a1-13ea703071b8">
+    <data-source source="LOCAL" name="temple@192.168.178.27 [2]" uuid="792d73c1-f57b-4946-a9a1-13ea703071b8">
       <driver-ref>postgresql</driver-ref>
       <synchronize>true</synchronize>
       <schema-control>AUTOMATIC</schema-control>
       <jdbc-driver>org.postgresql.Driver</jdbc-driver>
-      <jdbc-url>jdbc:postgresql://185.128.244.228:5432/temple</jdbc-url>
+      <jdbc-url>jdbc:postgresql://192.168.178.27:5432/temple</jdbc-url>
       <working-dir>$ProjectFileDir$</working-dir>
     </data-source>
     <data-source source="LOCAL" name="basuki@fat" uuid="7ca2f1a7-245d-48f8-bc7e-6b2d4ae2a124">
@@ -15,6 +15,13 @@
       <schema-control>AUTOMATIC</schema-control>
       <jdbc-driver>org.postgresql.Driver</jdbc-driver>
       <jdbc-url>jdbc:postgresql://fat:5432/temple</jdbc-url>
+      <working-dir>$ProjectFileDir$</working-dir>
+    </data-source>
+    <data-source source="LOCAL" name="temple@192.168.178.27" uuid="d8098b2f-f1d3-4796-8eff-98c265777bf8">
+      <driver-ref>postgresql</driver-ref>
+      <synchronize>true</synchronize>
+      <jdbc-driver>org.postgresql.Driver</jdbc-driver>
+      <jdbc-url>jdbc:postgresql://192.168.178.27:5432/temple</jdbc-url>
       <working-dir>$ProjectFileDir$</working-dir>
     </data-source>
   </component>
