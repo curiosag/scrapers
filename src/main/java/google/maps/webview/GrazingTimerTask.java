@@ -25,10 +25,23 @@ public class GrazingTimerTask extends TimerTask {
     public void run() {
         if (locations.size() > 0) {
             Point l = locations.pop();
-            touch.accept((float) l.lat, (float) l.lon);
-            timer.schedule(new GrazingTimerTask(locations, touch, delay, onGrazed,timer), delay);
+            retouch((float) l.lat, (float) l.lon, 4);
         } else {
             onGrazed.run();
         }
+    }
+
+    private void retouch(float x, float y, int count) {
+        timer.schedule(new TimerTask() {
+            @Override
+            public void run() {
+                if (count != 0) {
+                    touch.accept(x, y);
+                    retouch(x, y - count * 3, count - 1);
+                } else {
+                    timer.schedule(new GrazingTimerTask(locations, touch, delay, onGrazed, timer), delay);
+                }
+            }
+        }, 160);
     }
 }

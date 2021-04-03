@@ -1,8 +1,7 @@
-package google.maps.tiles;
+package google.maps.tileScraper;
 
-import google.maps.PixelCoordinate;
+import google.maps.MarkerCoordinate;
 import google.maps.Point;
-import google.maps.dao.FastScanDao;
 
 import javax.imageio.ImageIO;
 import java.awt.image.BufferedImage;
@@ -15,8 +14,8 @@ import java.util.concurrent.Executors;
 import java.util.concurrent.TimeUnit;
 import java.util.stream.Collectors;
 
-import static google.maps.tiles.MarkerDetector.getMarkerPixelCoordinates;
-import static google.maps.tiles.TilePixelSequenceExtractor.getPixelSequences;
+import static google.maps.webview.markers.MarkerTipDetector.getMarkerTipCoordinates;
+import static google.maps.tileScraper.TilePixelSequenceExtractor.getPixelSequences;
 
 public class TileScraper {
 
@@ -106,8 +105,8 @@ public class TileScraper {
 
     private void processTiles(int squareX, int squareY, Tile[][] square) {
         List<List<PixelSequence>> sequences = getPixelSequences(square);
-        List<PixelCoordinate> markerPixelCoordinates = getMarkerPixelCoordinates(sequences);
-        List<Point> coordinates = markerPixelCoordinates.stream()
+        List<MarkerCoordinate> markerMarkerCoordinates = getMarkerTipCoordinates(sequences);
+        List<Point> coordinates = markerMarkerCoordinates.stream()
                 .map(i -> MercatorProjection.unproject(i.x, i.y, zoom))
                 .collect(Collectors.toList());
         writer.write(coordinates, squareX, squareY);

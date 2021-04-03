@@ -1,7 +1,7 @@
 package google.maps.webview;
 
 import com.sun.javafx.webkit.WebConsoleListener;
-import google.maps.PixelCoordinate;
+import google.maps.MarkerCoordinate;
 import google.maps.Point;
 import google.maps.extraction.ResultFileExtractor;
 import google.maps.webview.markers.MarkerDetector;
@@ -26,9 +26,7 @@ import javafx.scene.robot.Robot;
 import javafx.scene.web.WebEngine;
 import javafx.scene.web.WebView;
 
-import javax.imageio.ImageIO;
 import java.awt.image.BufferedImage;
-import java.io.File;
 import java.io.IOException;
 import java.net.CookieHandler;
 import java.net.CookieManager;
@@ -36,7 +34,9 @@ import java.net.CookiePolicy;
 import java.nio.file.Files;
 import java.nio.file.Path;
 import java.nio.file.Paths;
-import java.util.*;
+import java.util.ArrayDeque;
+import java.util.List;
+import java.util.TimerTask;
 import java.util.concurrent.atomic.AtomicBoolean;
 import java.util.function.Consumer;
 import java.util.stream.Collectors;
@@ -45,15 +45,16 @@ import static google.maps.webview.GrazingDirection.LEFT_TO_RIGHT;
 import static google.maps.webview.GrazingDirection.RIGHT_TO_LEFT;
 import static google.maps.webview.Log.log;
 import static google.maps.webview.ScanChunkifyer.chunkify;
+import static google.maps.webview.markers.RGB.green;
 
 class ScrapeBrowser extends Region {
     final JsBridge jsbridge;
 
     public AtomicBoolean cancelled = new AtomicBoolean();
+
     Consumer<Point> onCoordinateSeen;
 
     private final static String markedImagePath = "./scraped/markedImages/";
-    private final static String mapScreenshotPath = "./scraped/mapCapture.png";
 
     final WebView webView = new WebView();
     final WebEngine webEngine = webView.getEngine();
@@ -69,7 +70,7 @@ class ScrapeBrowser extends Region {
     private GrazingDirection grazingDirection = LEFT_TO_RIGHT;
     private AreaExceeded areaExceeded = AreaExceeded.NO;
 
-    private final ConditionalTimer timer = new ConditionalTimer(() -> true, "mapops", true);
+    private final ConditionalTimer timer = new ConditionalTimer(() -> true, "mapOps", true);
     private MarkerProcessingType markerProcessingType = MarkerProcessingType.temple;
 
     public ScrapeBrowser(SetUp setUp) {
@@ -82,7 +83,7 @@ class ScrapeBrowser extends Region {
         Path pResultFiles = Paths.get(ResultFileExtractor.resultFilePath);
         if (!Files.exists(pResultFiles))
             try {
-                System.out.println("Setting up directories in " + System.getProperty("user.dir"));
+                log("Setting up directories in " + System.getProperty("user.dir"));
                 Files.createDirectories(pMarkedImage);
                 Files.createDirectories(pResultFiles);
             } catch (IOException e) {
@@ -139,7 +140,7 @@ class ScrapeBrowser extends Region {
 
     private void feedback(ScrapeJob scrapeJob, String url) {
         if (scrapeJob.id > 0) {
-            log(String.format("Scrape job id:%d at %s",
+            log(String.format("working job id:%d at %s",
                     scrapeJob.id, scrapeJob.getCurrentPosition()));
         } else
             log(url);
@@ -147,8 +148,8 @@ class ScrapeBrowser extends Region {
 
     private void maybeAutorun(boolean autorun) {
         if (autorun) {
-            System.out.println("Starting to graze in 10 secs");
-            schedule(this::startGrazing, 10000);
+            log("Starting to graze in 11 secs");
+            schedule(this::startGrazing, 11000);
         }
     }
 
@@ -201,7 +202,7 @@ class ScrapeBrowser extends Region {
     }
 
     private void setupJsConsoleListener() {
-        WebConsoleListener.setDefaultListener((webView, message, lineNumber, sourceId) -> System.out.println("console: " + message));
+        WebConsoleListener.setDefaultListener((webView, message, lineNumber, sourceId) -> log("JS console: " + message));
     }
 
     private void startGrazing() {
@@ -221,7 +222,7 @@ class ScrapeBrowser extends Region {
 
         if (!isDone() && !cancelled.get()) {
             Runnable continueWith = () -> moveMapHorizontally(this::checkAndTurn);
-            new GrazingTimerTask(new ArrayDeque<>(locations), this::mouseMove, 500, continueWith, timer).run();
+            new GrazingTimerTask(new ArrayDeque<>(locations), this::mouseMove, 10, continueWith, timer).run();
         }
     }
 
@@ -239,27 +240,35 @@ class ScrapeBrowser extends Region {
         if (cancelled.get())
             return;
 
-        List<PixelCoordinate> locations;
+        List<MarkerCoordinate> locations;
         switch (markerProcessingType) {
-            case temple -> {
-                locations = MarkerDetector.getTemples(saveScreenshotToFile(mapScreenshotPath));
-            }
+            case temple -> locations = MarkerDetector.getHinduTempleMarkers(getScreenshot());
             case any -> {
-                BufferedImage image = saveScreenshotToFile(mapScreenshotPath);
-                locations = chunkify(MarkerDetector.getMarkerPixelCoordinates(image));
+                BufferedImage image = getScreenshot();
+                locations = chunkify(removeGreenMarkers(MarkerDetector.getMarkerTipCoordinates(image)));
             }
             default -> throw new IllegalStateException();
         }
 
         MapScreenMeasures measures = new MapScreenMeasures(webView);
-
         List<Point> screenLocations = locations.stream()
                 .filter(l -> grazingDirection == LEFT_TO_RIGHT ? l.x < measures.mapCenterX + 20 : l.x >= measures.mapCenterX - 20)
                 .filter(l -> l.x >= ScreenCoordinatesMap.offsetX)
                 .map(l -> toScreenCoordinates(l, measures))
                 .collect(Collectors.toList());
 
+
         graze(screenLocations);
+    }
+
+    private List<MarkerCoordinate> removeGreenMarkers(List<MarkerCoordinate> markerMarkerCoordinates) {
+        return markerMarkerCoordinates.stream()
+                .filter(c -> notTooGreen(c.color))
+                .collect(Collectors.toList());
+    }
+
+    private static boolean notTooGreen(int color) {
+        return green(color) <= 160;
     }
 
     private void moveMapHorizontally(Runnable next) {
@@ -270,7 +279,7 @@ class ScrapeBrowser extends Region {
         float centerX = l.x + l.w / 2;
         // create some overlap between moved map sections in order to catch markers that otherwise may be precisely at the border line
         float overlapOffset = grazingDirection == LEFT_TO_RIGHT ? -15 : 15;
-        float startX = centerX + overlapOffset; // make sure that MoveTimerTask params x and startx are initially equal
+        float startX = centerX + overlapOffset; // make sure that MoveTimerTask params x and startX are initially equal
         int delay = 10;
         switch (grazingDirection) {
             // search window moves right, map moves left, mouse moves left
@@ -292,10 +301,10 @@ class ScrapeBrowser extends Region {
         // only move south once
         if (lastGrazingDirection != grazingDirection) {
             lastGrazingDirection = grazingDirection;
-            moveSouth(() -> schedule(this::gatherLocationsAndGraze, 1500));
-            System.out.println("turned around " + grazingDirection + " at " + scrapeJob.getCurrentPosition());
+            moveSouth(() -> schedule(this::gatherLocationsAndGraze, 1000));
+            log("turned around " + grazingDirection + " at " + scrapeJob.getCurrentPosition());
         } else {
-            schedule(this::gatherLocationsAndGraze, 1500);
+            schedule(this::gatherLocationsAndGraze, 1000);
         }
     }
 
@@ -305,7 +314,7 @@ class ScrapeBrowser extends Region {
         ScreenCoordinatesMap l = new ScreenCoordinatesMap(webView);
 
         float overlapOffset = -15;
-        float startY = l.y + l.h + overlapOffset; // make sure that MoveTimerTask y and starty are initially equal
+        float startY = l.y + l.h + overlapOffset; // make sure that MoveTimerTask y and startY are initially equal
         float x = l.x + 500; // avoid the hidden map elements
         int delay = 30;
         new MoveTimerTask(x, x, x, 0, startY, startY, l.y, -10, delay, robot, andThen, timer).run();
@@ -334,19 +343,18 @@ class ScrapeBrowser extends Region {
         layoutInArea(toolBar, 0, h - tbHeight, w, tbHeight, 0, HPos.CENTER, VPos.CENTER);
     }
 
-    @SuppressWarnings("SameParameterValue")
-    private BufferedImage saveScreenshotToFile(String capturedImagePath) {
+    @SuppressWarnings({"SameParameterValue", "CommentedOutCode"})
+    private BufferedImage getScreenshot() {
         //SnapshotParameters params = new SnapshotParameters();
         //params.setViewport(new Rectangle2D(mapOffset, 0, (w - mapOffset) / 2, h));
         // SnapshotParameters.viewport lead to frequent ArrayOutOfBoundsExceptions in image detection
         Image image = webView.snapshot(null, null);
-        BufferedImage bi = SwingFXUtils.fromFXImage(image, null);
-        try {
-            ImageIO.write(bi, "png", new File(capturedImagePath));
+        /*try {
+            ImageIO.write(bi, "png", new File(mapScreenshotPath));
         } catch (IOException e) {
             throw new RuntimeException(e);
-        }
-        return bi;
+        }*/
+        return SwingFXUtils.fromFXImage(image, null);
     }
 
     private void schedule(Runnable r, long delay) {
@@ -365,12 +373,8 @@ class ScrapeBrowser extends Region {
         return cancelled.get() || areaExceeded == AreaExceeded.SOUTH;
     }
 
-    private Point toScreenCoordinates(PixelCoordinate m, MapScreenMeasures measures) {
+    private Point toScreenCoordinates(MarkerCoordinate m, MapScreenMeasures measures) {
         return new Point(m.x + measures.screenOffsetX, m.y + measures.screenOffsetY);
-    }
-
-    private Point toScreenCoordinates(Point p, MapScreenMeasures measures) {
-        return new Point(p.lat + measures.screenOffsetX, p.lon + measures.screenOffsetY);
     }
 
 }

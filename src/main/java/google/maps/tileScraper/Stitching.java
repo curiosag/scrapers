@@ -1,4 +1,4 @@
-package google.maps.tiles;;
+package google.maps.tileScraper;;
 
 import javax.imageio.ImageIO;
 import java.awt.*;
@@ -36,7 +36,23 @@ public class Stitching {
         storeImage(outputImage, path + "/../stiched.png");
     }
 
-    private BufferedImage readImage(String path) {
+    public static BufferedImage stitch(BufferedImage[][] images) {
+        int rows = images.length;
+        int cols = images[0].length;
+
+        BufferedImage outputImage = new BufferedImage(256 * cols, 256 * rows, BufferedImage.TYPE_INT_ARGB_PRE);
+        Graphics2D g = outputImage.createGraphics();
+
+        for (int i = 0; i < rows; i++) {
+            for (int j = 0; j < cols; j++) {
+                g.drawImage(images[i][j], j * 256, i * 256, 256, 256, null);
+            }
+        }
+
+        return outputImage;
+    }
+
+    private static BufferedImage readImage(String path) {
         try {
             return ImageIO.read(new File(path));
         } catch (IOException e) {

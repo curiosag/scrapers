@@ -1,4 +1,4 @@
-package google.maps.tiles;
+package google.maps.tileScraper;
 
 import java.awt.image.BufferedImage;
 import java.util.ArrayList;
@@ -11,7 +11,7 @@ public class TilePixelSequenceExtractor {
      * for each line (y-coordinate) of the stitched area sequences of equally colored pixels of length >= 3
      * x/y values of PixelSequence are global pixel values for the zoom level of the tiles
      */
-    static List<List<PixelSequence>> getPixelSequences(Tile[][] tiles) {
+    public static List<List<PixelSequence>> getPixelSequences(Tile[][] tiles) {
         int width = tiles.length;
         Tile tileZero = tiles[0][0];
 
@@ -35,7 +35,6 @@ public class TilePixelSequenceExtractor {
                     for (int x = 0; x <= 255; x++) {
                         globalX++;
                         int rgb = image.getRGB(x, y);
-
                         if (rgb == currentColor) {
                             currentLength++;
                         } else {

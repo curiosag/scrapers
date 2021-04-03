@@ -2,8 +2,8 @@ package google.maps.dao;
 
 import google.maps.Const;
 import google.maps.Point;
-import google.maps.tiles.TileCoordinate;
-import google.maps.tiles.TileScrapeWriter;
+import google.maps.tileScraper.TileCoordinate;
+import google.maps.tileScraper.TileScrapeWriter;
 
 import java.sql.Connection;
 import java.sql.ResultSet;

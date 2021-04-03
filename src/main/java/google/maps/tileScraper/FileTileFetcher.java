@@ -1,4 +1,4 @@
-package google.maps.tiles;
+package google.maps.tileScraper;
 
 import javax.imageio.ImageIO;
 import java.io.File;

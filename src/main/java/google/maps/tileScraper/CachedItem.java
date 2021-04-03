@@ -1,4 +1,4 @@
-package google.maps.tiles;
+package google.maps.tileScraper;
 
 public interface CachedItem<T> {
 

@@ -1,4 +1,4 @@
-package google.maps.tiles;
+package google.maps.tileScraper;
 
 import java.util.ArrayList;
 import java.util.List;

@@ -1,6 +1,6 @@
 package google.maps.webview.markers;
 
-import google.maps.tiles.PixelSequence;
+import google.maps.tileScraper.PixelSequence;
 
 import java.awt.image.BufferedImage;
 import java.util.ArrayList;

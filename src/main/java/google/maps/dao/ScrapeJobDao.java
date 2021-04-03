@@ -46,7 +46,7 @@ public class ScrapeJobDao implements ScrapeJobStore {
                 if (r.getInt("current_lat") == 0) {
                     Point north = getApexNorth(area.getBoundary());
                     clat = north.getLatitude() - 0.0002; // enter area
-                    clon = north.getLongitude();
+                    clon = north.getLongitude() + 0.0002;
                 }
 
                 return Optional.of(new ScrapeJob(id, new Point(clat, clon), area, this));

@@ -1,12 +1,14 @@
 package google.maps.webview.markers;
 
-import google.maps.PixelCoordinate;
+import google.maps.MarkerCoordinate;
 
 import java.awt.image.BufferedImage;
 import java.util.List;
 import java.util.Optional;
 import java.util.stream.Collectors;
 import java.util.stream.IntStream;
+
+import static google.maps.webview.markers.RGB.blue;
 
 public class MarkerDetector {
     static final int idxColor = 0;
@@ -36,21 +38,26 @@ public class MarkerDetector {
         markerColor = image.getRGB(startX, startY);
     }
 
-    public static List<PixelCoordinate> getMarkerPixelCoordinates(BufferedImage image) {
-        return google.maps.tiles.MarkerDetector.getMarkerPixelCoordinates(ImagePixelSequenceExtractor.getPixelSequences(image));
+    public static List<MarkerCoordinate> getMarkerTipCoordinates(BufferedImage image) {
+        return MarkerTipDetector.getMarkerTipCoordinates(ImagePixelSequenceExtractor.getPixelSequences(image));
     }
 
-    public static List<PixelCoordinate> getTemples(BufferedImage image) {
-        return getMarkerPixelCoordinates(image).stream()
+    public static List<MarkerCoordinate> getHinduTempleMarkers(BufferedImage image) {
+        return getMarkerTipCoordinates(image).stream()
                 .filter(c -> {
                     float r = new MarkerDetector(image, (int) c.x, (int) c.y).getWhitePixelRatio(c, image);
-                    return r >= 0.055 & r <= 0.059;
+                    return r >= 0.03 & r <= 0.07;
                 })
-                .map(c -> new PixelCoordinate(c.x, c.y - 7))
+                .filter(MarkerDetector::noRestaurant)
+                .map(c -> new MarkerCoordinate(c.x, c.y - 7, c.color))
                 .collect(Collectors.toList());
     }
 
-    float getWhitePixelRatio(PixelCoordinate c, BufferedImage image) {
+    private static boolean noRestaurant(MarkerCoordinate c){
+        return blue(c.color) > 150; // restaurants have 0 blue
+    }
+
+    float getWhitePixelRatio(MarkerCoordinate c, BufferedImage image) {
         gatherSurrounding((int) c.x, (int) c.y);
         List<XBoundary> xBoundaries = IntStream.range(0, matchMatrix.length)
                 .mapToObj(i -> getXBoundary(i, matchMatrix))

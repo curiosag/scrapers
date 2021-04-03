@@ -8,7 +8,6 @@ public class PlaceCoordWriter implements PlaceDataSink {
     
     @Override
     public synchronized void put(String url) {
-        System.out.println(url);
         UrlCoordExtractor.extract(url).ifPresent(
                 c -> writer.writeCsvRecord(String.format("%.7f;%.7f\n", c.getLongitude(), c.getLatitude()))
         );

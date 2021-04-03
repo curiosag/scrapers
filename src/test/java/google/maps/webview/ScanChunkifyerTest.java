@@ -1,6 +1,6 @@
 package google.maps.webview;
 
-import google.maps.PixelCoordinate;
+import google.maps.MarkerCoordinate;
 import org.junit.Test;
 
 import static org.junit.Assert.*;
@@ -14,7 +14,7 @@ public class ScanChunkifyerTest {
         assertEquals(Math.sqrt(200), ScanChunkifyer.getDistance(of(10,10), of(20,20)), 0.0001);
     }
 
-    private PixelCoordinate of(int x, int y){
-        return new PixelCoordinate(x, y);
+    private MarkerCoordinate of(int x, int y){
+        return new MarkerCoordinate(x, y, 0);
     }
 }
