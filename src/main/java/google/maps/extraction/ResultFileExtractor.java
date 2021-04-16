@@ -17,7 +17,7 @@ public class ResultFileExtractor {
 
     public static void main(String[] args) throws SQLException {
         //extractToFile("./scraped/api/", "./scraped/apiPlaces.sql", ResultFileExtractor::getSql);
-        extractFromCsv("/home/ssmertnig/temp/responses.csv", "/home/ssmertnig/temp/responses.sql", ResultFileExtractor::getSql);
+        extractFromCsv("/home/ssmertnig/dev/data/temples/collectedNepal.csv", "/home/ssmertnig/dev/data/temples/collectedNepal.sql", ResultFileExtractor::getSql);
     }
 
     private static void extractFromCsv(String csvInputPath, String outputFileName, Function<PlaceSearchResultItem, String> outputGenerator) {
@@ -67,18 +67,18 @@ public class ResultFileExtractor {
         }
     }
 
-    private static final String csvRowTemplate = "%s,\"%s\",\"%s\",\"%s\",\"%s\",%.14f,%.14f\n";
+    private static final String csvRowTemplate = "%d,%s,\"%s\",\"%s\",\"%s\",\"%s\",%.14f,%.14f,%s\n";
 
     public static String getCsv(PlaceSearchResultItem i) {
-        return String.format(csvRowTemplate, i.placeId, i.name, i.plus_compound_code, i.adress,
-                i.vicinity, i.lat, i.lon);
+        return String.format(csvRowTemplate, i.id,i.placeId, i.name, i.global_code, i.adress,
+                i.vicinity, i.lat, i.lon, i.resultType);
     }
 
-    private static final String insertPlace = "insert into place_scraped (place_id, name, plus_compound_code, global_code, vicinity, geom) values ('%s','%s','%s','%s','%s', ST_GeomFromText('POINT(%.14f %.14f)', 4326)) ON CONFLICT (place_id) DO NOTHING;\n";
+    private static final String insertPlace = "insert into temple.place_scraped (place_id, name, global_code, address, vicinity, geom) values ('%s','%s','%s','%s','%s', ST_GeomFromText('POINT(%.14f %.14f)', 4326)) ON CONFLICT (place_id) DO NOTHING;\n";
 
     public static String getSql(PlaceSearchResultItem i) {
         return String.format(insertPlace, i.placeId, quote(i.name),
-                i.plus_compound_code, quote(i.adress), quote(i.vicinity), i.lat, i.lon);
+                i.global_code, quote(i.adress), quote(i.vicinity), i.lat, i.lon);
     }
 
     private static String quote(String s) {
@@ -98,7 +98,7 @@ public class ResultFileExtractor {
         }
 
         for (String file : files) {
-            Optional<PlaceSearchResultItem> item = MapPlaceDetailsResponseExtractor.extract(Files.readString(Path.of(path + file)));
+            Optional<PlaceSearchResultItem> item = MapPlaceDetailsResponseExtractor.extractFromMapKlickResult(Files.readString(Path.of(path + file)));
             item.ifPresent(i -> {
                 if (!locationIds.contains(i.placeId)) {
                     sink.accept(i);

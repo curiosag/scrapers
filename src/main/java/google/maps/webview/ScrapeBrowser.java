@@ -3,7 +3,6 @@ package google.maps.webview;
 import com.sun.javafx.webkit.WebConsoleListener;
 import google.maps.MarkerCoordinate;
 import google.maps.Point;
-import google.maps.extraction.ResultFileExtractor;
 import google.maps.webview.markers.MarkerDetector;
 import google.maps.webview.scrapejob.ScrapeJob;
 import javafx.application.Platform;
@@ -49,12 +48,10 @@ import static google.maps.webview.markers.RGB.green;
 
 class ScrapeBrowser extends Region {
     final JsBridge jsbridge;
-
-    public AtomicBoolean cancelled = new AtomicBoolean();
+    private SetUp setUp;
+    private AtomicBoolean cancelled = new AtomicBoolean();
 
     Consumer<Point> onCoordinateSeen;
-
-    private final static String markedImagePath = "./scraped/markedImages/";
 
     final WebView webView = new WebView();
     final WebEngine webEngine = webView.getEngine();
@@ -71,31 +68,23 @@ class ScrapeBrowser extends Region {
     private AreaExceeded areaExceeded = AreaExceeded.NO;
 
     private final ConditionalTimer timer = new ConditionalTimer(() -> true, "mapOps", true);
-    private MarkerProcessingType markerProcessingType = MarkerProcessingType.temple;
+    private ProcessingType processingType = ProcessingType.marker_temple;
+
+    public void cancel() {
+        cancelled.set(true);
+    }
 
     public ScrapeBrowser(SetUp setUp) {
-        this(setUp.autorun, setUp.getScrapeJob(), setUp.zoom, setUp.getScrapeJob()::setCurrentPosition);
-        markerProcessingType = setUp.markerProcessingType;
+        this(setUp.autorun, setUp, setUp.zoom, setUp.getScrapeJob()::setCurrentPosition);
+        processingType = setUp.processingType;
     }
 
-    private void setupFileStuff() {
-        Path pMarkedImage = Paths.get(markedImagePath);
-        Path pResultFiles = Paths.get(ResultFileExtractor.resultFilePath);
-        if (!Files.exists(pResultFiles))
-            try {
-                log("Setting up directories in " + System.getProperty("user.dir"));
-                Files.createDirectories(pMarkedImage);
-                Files.createDirectories(pResultFiles);
-            } catch (IOException e) {
-                throw new RuntimeException(e);
-            }
-    }
-
-    private ScrapeBrowser(boolean autorun, ScrapeJob scrapeJob, float zoom, Consumer<Point> onCoordinateSeen) {
-        setupFileStuff();
-
-        this.scrapeJob = scrapeJob;
+    private ScrapeBrowser(boolean autorun, SetUp setUp, float zoom, Consumer<Point> onCoordinateSeen) {
+        this.setUp = setUp;
+        this.scrapeJob = setUp.getScrapeJob();
         this.onCoordinateSeen = onCoordinateSeen;
+
+        setupFileStuff();
 
         webView.setOnMouseMoved(this::onMouseMove);
         webView.setOnKeyPressed(this::onKeyPressed);
@@ -125,8 +114,33 @@ class ScrapeBrowser extends Region {
         webEngine.load(url);
         maybeAutorun(autorun);
 
-        jsbridge = new JsBridge(webEngine, this::onUrlSeen, (hu, ha) -> {
-        }, this::onContextMenuItem);
+        if (setUp.processingType != ProcessingType.manual_search) {
+            jsbridge = new JsBridge(webEngine, this::onUrlSeen, (hu, ha) -> {
+            }, this::onCoordinatesSeen);
+        } else
+            jsbridge = null;
+    }
+
+
+    private void setupFileStuff() {
+        Path pMarkedImage = Paths.get(getMarkedImagePath());
+        Path pResultFiles = Paths.get(getResultFilePath());
+        if (!Files.exists(pResultFiles))
+            try {
+                log("Setting up directories in " + System.getProperty("user.dir"));
+                Files.createDirectories(pMarkedImage);
+                Files.createDirectories(pResultFiles);
+            } catch (IOException e) {
+                throw new RuntimeException(e);
+            }
+    }
+
+    private String getMarkedImagePath() {
+        return Const.markedImagePath + setUp.displayNumber + "/";
+    }
+
+    private String getResultFilePath() {
+        return Const.resultFilePath + setUp.displayNumber;
     }
 
     private void onMoveButtonPressed(ActionEvent actionEvent) {
@@ -155,41 +169,60 @@ class ScrapeBrowser extends Region {
 
     private String prevCoords = "";
 
-    private void onContextMenuItem(String coords) {
+    private void onCoordinatesSeen(String coords) {
         if (cancelled.get())
             return;
-
-        if (!coords.equals(prevCoords)) {
-            log(coords);
-            prevCoords = coords;
-        }
 
         String[] parts = coords.split(",");
         if (parts.length != 2)
             throw new IllegalStateException();
 
-        double lat = Double.parseDouble(parts[0]);
+        double lat = avoidFakeTooFarNorthCoordinate(Double.parseDouble(parts[0]));
         double lon = Double.parseDouble(parts[1]);
 
         Point p = new Point(lat, lon);
         scrapeJob.setCurrentPosition(p);
 
+        if (!coords.equals(prevCoords)) {
+            log(String.format("%.2f%s %s", scrapeJob.getPctLatitudeDone(), "%", coords));
+            prevCoords = coords;
+        }
+
         areaExceeded = scrapeJob.scrapeArea.exceeded(p);
         switch (areaExceeded) {
             case RIGHT, LEFT -> { // will be treated in the navigation events below
             }
-            case NORTH -> throw new IllegalStateException();
+            case NORTH -> throw strangelyExceededException(areaExceeded.name(), p, scrapeJob.scrapeArea.getNorthernMost());
             case SOUTH -> exitApplication(p);
             case NO -> onCoordinateSeen.accept(p);
         }
+    }
+
+    private double avoidFakeTooFarNorthCoordinate(double lat) {
+        return Math.min(lat, scrapeJob.getCurrentPosition().lat);
+    }
+
+    private IllegalStateException strangelyExceededException(String how, Point p, Point northernMost) {
+        return new IllegalStateException(String.format("Exceeding %s????.\napexNorth:%s\ncurrent:%s", how, northernMost, p));
     }
 
     private void onUrlSeen(String url) {
     }
 
     private void exitApplication(Point p) {
-        System.out.printf("Finished scrape job %d at %s\n", scrapeJob.id, p.toString());
-        Platform.exit();
+        cancel();
+        try {
+            scrapeJob.release(null);
+        } finally {
+            Platform.runLater(Platform::exit);
+            timer.schedule(new TimerTask() {
+                @Override
+                public void run() {
+                    System.out.printf("Finished scrape job %d at %s\n", scrapeJob.id, p.toString());
+                    System.exit(0);
+                }
+            }, 2000);
+        }
     }
 
     private void onKeyPressed(KeyEvent keyEvent) {
@@ -207,18 +240,17 @@ class ScrapeBrowser extends Region {
 
     private void startGrazing() {
         areaExceeded = scrapeJob.scrapeArea.exceeded(scrapeJob.getCurrentPosition());
-        schedule(() -> {
-            if (areaExceeded == AreaExceeded.NO) {
-                gatherLocationsAndGraze();
-            } else {
-                log("Initial area not within boundaries");
-                System.exit(1);
-            }
-        }, 500);
+
+        if (areaExceeded == AreaExceeded.NO) {
+            gatherLocationsAndGraze();
+        } else {
+            log("Initial area exceeds " + areaExceeded.name());
+            System.exit(1);
+        }
     }
 
     private void graze(List<Point> locations) {
-        MemoryWatcher.watch(scrapeJob);
+        MemoryWatcher.watch(scrapeJob, setUp.maxGbMem);
 
         if (!isDone() && !cancelled.get()) {
             Runnable continueWith = () -> moveMapHorizontally(this::checkAndTurn);
@@ -226,24 +258,14 @@ class ScrapeBrowser extends Region {
         }
     }
 
-    void checkAndTurn() {
-        schedule(() -> {
-            if (areaExceeded == AreaExceeded.NO) {
-                gatherLocationsAndGraze();
-            } else {
-                turnAround_moveSouth();
-            }
-        }, 500);
-    }
-
     private void gatherLocationsAndGraze() {
         if (cancelled.get())
             return;
 
         List<MarkerCoordinate> locations;
-        switch (markerProcessingType) {
-            case temple -> locations = MarkerDetector.getHinduTempleMarkers(getScreenshot());
-            case any -> {
+        switch (processingType) {
+            case marker_temple -> locations = MarkerDetector.getHinduTempleMarkers(getScreenshot());
+            case marker_any -> {
                 BufferedImage image = getScreenshot();
                 locations = chunkify(removeGreenMarkers(MarkerDetector.getMarkerTipCoordinates(image)));
             }
@@ -289,13 +311,28 @@ class ScrapeBrowser extends Region {
         }
     }
 
+    void checkAndTurn() {
+        if (isDone()) {
+            scrapeJob.release(null);
+            exitApplication(scrapeJob.getCurrentPosition());
+        } else {
+            schedule(() -> {
+                if (areaExceeded == AreaExceeded.NO) {
+                    gatherLocationsAndGraze();
+                } else {
+                    turnAround_moveSouth();
+                }
+            }, 500);
+        }
+    }
+
     private GrazingDirection lastGrazingDirection = LEFT_TO_RIGHT;
 
     private void turnAround_moveSouth() {
         grazingDirection = switch (areaExceeded) {
             case RIGHT -> RIGHT_TO_LEFT;
             case LEFT -> LEFT_TO_RIGHT;
-            default -> throw new IllegalStateException();
+            default -> throw strangelyExceededException(areaExceeded.name(), scrapeJob.getCurrentPosition(), scrapeJob.scrapeArea.getNorthernMost());
         };
         // after a turn we could end up here repeatedly until search are has been re-entered.
         // only move south once

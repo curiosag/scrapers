@@ -14,6 +14,7 @@ public class ScrapeAreaTest {
 
     @Test
     public void exceeding() {
+        float epsilon = 0.00001f;
         assertEquals(AreaExceeded.NO, r.exceeded(new Point(1.1,1.1)));
         assertEquals(AreaExceeded.RIGHT, r.exceeded(new Point(1.1,21)));
         assertEquals(AreaExceeded.LEFT, r.exceeded(new Point(1.1,0)));

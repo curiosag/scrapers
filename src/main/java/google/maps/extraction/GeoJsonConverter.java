@@ -9,14 +9,14 @@ import java.nio.file.Files;
 import java.nio.file.Path;
 import java.util.*;
 
-record GeoRecord(String name, String supName, String geo) {
-}
-
 public class GeoJsonConverter {
 
+    public record GeoRecord(String name, String supName, String geo) {
+    }
+
     public static void main(String[] args) throws IOException {
-        List<String> sql = toSql("Region", null, "/home/ssmertnig/dev/data/temples/qgisstuff/nepal.json");
-        write(sql, "/home/ssmertnig/dev/data/temples/qgisstuff/nepal.sql");
+        List<String> sql = toSql("COUNTRY", null, "/home/ssmertnig/dev/data/temples/qgisstuff/UIA_World.geojson");
+        write(sql, "/home/ssmertnig/dev/data/temples/qgisstuff/UIA_World.sql");
     }
 
 
@@ -78,9 +78,12 @@ public class GeoJsonConverter {
                 nodes.forEach(n -> {
                     String name = n.get("properties").get(nameProperty).textValue();
                     String supName = supNameProperty != null ? n.get("properties").get(supNameProperty).textValue() : null;
-                    JsonNode geo = n.get("geometry").get("coordinates");
-                    String type = n.get("geometry").get("type").textValue();
-                    result.add(new GeoRecord(name, supName, toMultiPolygon(type, geo)));
+                    JsonNode coord = n.get("geometry").get("coordinates");
+                    JsonNode typeNode = n.get("geometry").get("type");
+                    if (typeNode != null || coord != null) {
+                        String type = n.get("geometry").get("type").textValue();
+                        result.add(new GeoRecord(name, supName, toMultiPolygon(type, coord)));
+                    }
                 });
             }
         } catch (IOException e) {

@@ -1,0 +1,9 @@
+invalid regions: select * from temple.region where not st_isvalid(geom);
+missing districts
+
+
+Pango:ERROR:../pango/pango-context.c:1441:itemize_state_process_run: assertion failed: (state->run_end != state->run_start)
+Bail out! Pango:ERROR:../pango/pango-context.c:1441:itemize_state_process_run: assertion failed: (state->run_end != state->run_start)
+upgrade to 17-ea+7
+
+and java 16

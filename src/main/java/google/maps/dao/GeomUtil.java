@@ -11,11 +11,11 @@ public class GeomUtil {
         List<Point> points = new ArrayList<>();
         String s0 = geom.replace("POLYGON((", "").replace("))", "");
         for (String s : s0.split(",")) {
-            String[] lalo = s.split(" ");
-            if (lalo.length != 2) {
+            String[] lola = s.split(" ");
+            if (lola.length != 2) {
                 throw new IllegalStateException();
             }
-            points.add(new Point(Double.parseDouble(lalo[0]), Double.parseDouble(lalo[1])));
+            points.add(new Point(Double.parseDouble(lola[1]), Double.parseDouble(lola[0])));
         }
         return points;
     }

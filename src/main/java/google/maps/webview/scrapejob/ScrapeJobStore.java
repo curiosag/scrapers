@@ -8,7 +8,7 @@ public interface ScrapeJobStore {
 
     Optional<ScrapeJob> getNext();
 
-    void setProgress(int jobId, Point currentPosition);
+    void setProgress(int jobId, Point currentPosition, double pctLatitudeDone);
 
-    void releaseJob(int id, boolean done);
+    void releaseJob(int id, boolean done, String error);
 }

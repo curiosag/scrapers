@@ -32,7 +32,7 @@ public class ScrapeJobDao implements ScrapeJobStore {
 
         try {
             try {
-                ResultSet r = connection.createStatement().executeQuery(String.format(query,place_type));
+                ResultSet r = connection.createStatement().executeQuery(String.format(query, place_type));
                 if (!r.next())
                     return Optional.empty();
 
@@ -43,10 +43,10 @@ public class ScrapeJobDao implements ScrapeJobStore {
 
                 double clat = r.getDouble("current_lat");
                 double clon = r.getDouble("current_lon");
-                if (r.getInt("current_lat") == 0) {
+                if (r.getInt("current_lat") == 0 && r.getInt("current_lon") == 0) {
                     Point north = getApexNorth(area.getBoundary());
-                    clat = north.getLatitude() - 0.0002; // enter area
-                    clon = north.getLongitude() + 0.0002;
+                    clat = north.getLatitude() - 0.0005;
+                    clon = north.getLongitude();
                 }
 
                 return Optional.of(new ScrapeJob(id, new Point(clat, clon), area, this));
@@ -59,11 +59,11 @@ public class ScrapeJobDao implements ScrapeJobStore {
     }
 
     @Override
-    public void setProgress(int jobId, Point currentPosition) {
+    public void setProgress(int jobId, Point currentPosition, double pctLatitudeDone) {
         try {
-            String updateSql = "update temple.scrape_job set current_lat=%.7f, current_lon=%.7f where id=%d";
+            String updateSql = "update temple.scrape_job set current_lat=%.7f, current_lon=%.7f, pct_done=%.2f where id=%d";
             connection.createStatement().executeUpdate(
-                    String.format(updateSql, currentPosition.getLatitude(), currentPosition.getLongitude(), jobId));
+                    String.format(updateSql, currentPosition.getLatitude(), currentPosition.getLongitude(), pctLatitudeDone, jobId));
             connection.commit();
         } catch (SQLException e) {
             throw new RuntimeException(e);
@@ -71,11 +71,11 @@ public class ScrapeJobDao implements ScrapeJobStore {
     }
 
     @Override
-    public void releaseJob(int jobId, boolean done) {
+    public void releaseJob(int jobId, boolean done, String error) {
         try {
             String updateSql = done ?
                     "update temple.scrape_job set busy=0, finished=CURRENT_TIMESTAMP where id=%d" :
-                    "update temple.scrape_job set busy=0 where id=%d";
+                    ("update temple.scrape_job set busy=0 " + getErrorClause(error) + " where id=%d");
 
             connection.createStatement().executeUpdate(String.format(updateSql, jobId));
             connection.commit();
@@ -84,9 +84,13 @@ public class ScrapeJobDao implements ScrapeJobStore {
         }
     }
 
+    private String getErrorClause(String error) {
+        return String.format(" error='%s' ", error == null ? "" : error);
+    }
+
     public boolean allDone() {
         try {
-            String query = "select id from temple.scrape_job where finished is null and place_type='" + place_type+"'";
+            String query = "select id from temple.scrape_job where finished is null and place_type='" + place_type + "'";
             ResultSet r = connection.createStatement().executeQuery(query);
             r.next();
             r.getString("id");

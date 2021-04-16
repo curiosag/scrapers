@@ -4,8 +4,12 @@ import google.maps.webview.UrlCoordExtractor;
 
 public class PlaceCoordWriter implements PlaceDataSink {
 
-    private final FileWriter writer = new FileWriter("./scraped/scanned_coordinates");
-    
+    private final FileWriter writer ;
+
+    public PlaceCoordWriter(String path) {
+        writer = new FileWriter(path);
+    }
+
     @Override
     public synchronized void put(String url) {
         UrlCoordExtractor.extract(url).ifPresent(

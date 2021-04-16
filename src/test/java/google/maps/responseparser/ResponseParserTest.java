@@ -1,5 +1,8 @@
 package google.maps.responseparser;
 
+import google.maps.responseparser.DIYattempt.Node;
+import google.maps.responseparser.DIYattempt.ResponseParser;
+import google.maps.responseparser.DIYattempt.Symbol;
 import org.junit.Test;
 
 import java.io.IOException;
@@ -11,8 +14,8 @@ import java.util.List;
 
 import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertTrue;
-import static google.maps.responseparser.Node.nonTerminal;
-import static google.maps.responseparser.Node.terminal;
+import static google.maps.responseparser.DIYattempt.Node.nonTerminal;
+import static google.maps.responseparser.DIYattempt.Node.terminal;
 
 public class ResponseParserTest {
 

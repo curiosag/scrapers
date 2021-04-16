@@ -1,6 +1,7 @@
 package google.maps.webview.datasink;
 
 import google.maps.extraction.MapPlaceDetailsResponseExtractor;
+import google.maps.webview.ProcessingType;
 import util.HttpUtil;
 
 import java.util.concurrent.ExecutorService;
@@ -8,12 +9,14 @@ import java.util.concurrent.Executors;
 
 import static google.maps.extraction.ResultFileExtractor.getCsv;
 
-public class PlaceDetailsWriter implements PlaceDataSink {
+public class PlaceDetailsFileDbComboWriter implements PlaceDataSink {
 
+    PlaceDao dao = new PlaceDao();
     private final ExecutorService ex = Executors.newFixedThreadPool(1);
     private final FileWriter writer;
-    public PlaceDetailsWriter() {
-        writer = new FileWriter("./scraped/responses");
+
+    public PlaceDetailsFileDbComboWriter(String path) {
+        writer = new FileWriter(path);
     }
 
     @Override
@@ -23,16 +26,15 @@ public class PlaceDetailsWriter implements PlaceDataSink {
 
     void process(String url) {
         String response = HttpUtil.getByUrlConnection(url, 10000);
-        if (response.contains("[\"hindu_temple\"]")) {
-            MapPlaceDetailsResponseExtractor.extract(response).ifPresent(b -> {
-                writer.writeResponse(response);
-                writer.writeCsvRecord(getCsv(b));
+        if (response.contains(ProcessingType.marker_temple.place_type)) {
+            long id = dao.getNextId();
+            writer.writeResponse(id, response);
+            MapPlaceDetailsResponseExtractor.extractFromMapKlickResult(response).ifPresent(r -> {
+                r.setId(id);
+                dao.add(r);
+                writer.writeCsvRecord(getCsv(r));
             });
         }
     }
-
-
-
-
 
 }

@@ -2,7 +2,8 @@ package google.maps.webview;
 
 import google.maps.webview.datasink.PlaceCoordWriter;
 import google.maps.webview.datasink.PlaceDataSink;
-import google.maps.webview.datasink.PlaceDetailsWriter;
+import google.maps.webview.datasink.PlaceDetailsFileDbComboWriter;
+import google.maps.webview.intercept.ManualSearchUrlLoaderInterception;
 import google.maps.webview.intercept.URLLoaderInterceptor;
 import javafx.application.Application;
 import javafx.application.Platform;
@@ -27,20 +28,17 @@ public class ScraperApplication extends Application {
         launch(args);
     }
 
-    private SetUp setUp;
+    public static SetUp setUp;
     public static ScrapeBrowser browser;
 
     @Override
     public void start(Stage stage) {
-
         stage.setTitle("maps");
         setUp = new SetUp(getParameters().getRaw());
 
-        ScrapeBrowser scrapeBrowser = new ScrapeBrowser(setUp);
-        browser = scrapeBrowser;
         setupUrlLoaderInterceptor();
-
-        stage.setScene(new Scene(scrapeBrowser, 1910, 900, Color.web("#666970")));
+        browser = new ScrapeBrowser(setUp);
+        stage.setScene(new Scene(browser, 1910, 1000, Color.web("#666970")));
         stage.setX(0);
         stage.setY(0);
         stage.show();
@@ -64,30 +62,32 @@ public class ScraperApplication extends Application {
     }
 
     private void setupUrlLoaderInterceptor() {
-        final PlaceDataSink detailsWriter = switch (setUp.markerProcessingType) {
-            case temple -> new PlaceDetailsWriter();
-            case any -> new PlaceCoordWriter();
+        if (setUp.processingType == ProcessingType.manual_search)
+            ManualSearchUrlLoaderInterception.setUp();
+        else
+            setupAutomatedProcessing();
+    }
+
+    private void setupAutomatedProcessing() {
+        final PlaceDataSink detailsWriter = switch (setUp.processingType) {
+            case marker_temple -> new PlaceDetailsFileDbComboWriter(Const.resultFilePath + setUp.displayNumber);
+            case marker_any -> new PlaceCoordWriter(Const.scrapedDataFilePath + "/scn" + setUp.displayNumber);
+            default -> throw new IllegalStateException();
         };
 
-        URLLoaderInterceptor.onSendRequest = (c) -> {
-            if (c.getURL().toString().contains("/maps/preview/place")) {
-                detailsWriter.put(c.getURL().toString());
+        URLLoaderInterceptor.onSendRequest = (whatever, urlConnection) -> {
+            if (urlConnection.getURL().toString().contains("/maps/preview/place")) {
+                detailsWriter.put(urlConnection.getURL().toString());
                 return false;
             }
             return true;
-        };
-
-        URLLoaderInterceptor.onDidReceiveData = (data) -> {
-        };
-        URLLoaderInterceptor.onFinishedLoading = () -> {
-        };
-        URLLoaderInterceptor.onDidReceiveResponse = (c) -> {
         };
     }
 
     @Override
     public void stop() throws Exception {
-        setUp.getScrapeJob().release();
+        setUp.getScrapeJob().release(null);
         super.stop();
     }
+
 }

@@ -25,7 +25,7 @@ public class GrazingTimerTask extends TimerTask {
     public void run() {
         if (locations.size() > 0) {
             Point l = locations.pop();
-            retouch((float) l.lat, (float) l.lon, 4);
+            retouch((float) l.lat, (float) l.lon, 2);
         } else {
             onGrazed.run();
         }
@@ -37,9 +37,16 @@ public class GrazingTimerTask extends TimerTask {
             public void run() {
                 if (count != 0) {
                     touch.accept(x, y);
-                    retouch(x, y - count * 3, count - 1);
+                    retouch(x, y - count * 7, count - 1);
                 } else {
-                    timer.schedule(new GrazingTimerTask(locations, touch, delay, onGrazed, timer), delay);
+                    timer.schedule(new TimerTask() {
+                        @Override
+                        public void run() {
+                            touch.accept(200f, 3f); // ensure any popups disappear again by clicking on the window frame
+                            timer.schedule(new GrazingTimerTask(locations, touch, delay, onGrazed, timer), Math.max(delay, 150));
+                        }
+                    }, 150);
+
                 }
             }
         }, 160);

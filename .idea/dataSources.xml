@@ -6,7 +6,7 @@
       <synchronize>true</synchronize>
       <schema-control>AUTOMATIC</schema-control>
       <jdbc-driver>org.postgresql.Driver</jdbc-driver>
-      <jdbc-url>jdbc:postgresql://192.168.178.27:5432/temple</jdbc-url>
+      <jdbc-url>jdbc:postgresql://127.0.0.1:5432/temple</jdbc-url>
       <working-dir>$ProjectFileDir$</working-dir>
     </data-source>
     <data-source source="LOCAL" name="basuki@fat" uuid="7ca2f1a7-245d-48f8-bc7e-6b2d4ae2a124">
@@ -17,11 +17,11 @@
       <jdbc-url>jdbc:postgresql://fat:5432/temple</jdbc-url>
       <working-dir>$ProjectFileDir$</working-dir>
     </data-source>
-    <data-source source="LOCAL" name="temple@192.168.178.27" uuid="d8098b2f-f1d3-4796-8eff-98c265777bf8">
+    <data-source source="LOCAL" name="sshtunnel temples@fat" uuid="bfd27f1e-cdaa-4dab-ba36-d2e28e7cb455">
       <driver-ref>postgresql</driver-ref>
       <synchronize>true</synchronize>
       <jdbc-driver>org.postgresql.Driver</jdbc-driver>
-      <jdbc-url>jdbc:postgresql://192.168.178.27:5432/temple</jdbc-url>
+      <jdbc-url>jdbc:postgresql://localhost:65535/temple</jdbc-url>
       <working-dir>$ProjectFileDir$</working-dir>
     </data-source>
   </component>

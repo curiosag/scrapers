@@ -1,9 +1,9 @@
-package google.maps.responseparser;
+package google.maps.responseparser.DIYattempt;
 
 import java.util.HashMap;
 import java.util.Map;
 
-import static google.maps.responseparser.Symbol.*;
+import static google.maps.responseparser.DIYattempt.Symbol.*;
 
 public class ResponseScanner {
 

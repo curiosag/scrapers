@@ -1,4 +1,4 @@
-package google.maps.responseparser;
+package google.maps.responseparser.DIYattempt;
 
 import java.util.Objects;
 

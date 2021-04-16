@@ -1,0 +1,87 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="utf-8">
+    <title>OpenStreetMap &amp; OpenLayers - Marker Example</title>
+    <meta http-equiv="Content-Type" content="text/html; charset=UTF-8" />
+    <link rel="stylesheet" href="https://openlayers.org/en/v4.6.5/css/ol.css" type="text/css">
+    <script src="https://openlayers.org/en/v4.6.5/build/ol.js" type="text/javascript"></script>
+
+  <script>
+    /* OSM & OL example code provided by https://mediarealm.com.au/ */
+    var map;
+    var mapLat = 48.7776;
+        var mapLng = 9.2325;
+    var mapDefaultZoom = 18;
+
+    function initialize_map() {
+      map = new ol.Map({
+        target: "map",
+        layers: [
+            new ol.layer.Tile({
+                source: new ol.source.OSM({
+                      url: "https://a.tile.openstreetmap.org/{z}/{x}/{y}.png"
+                })
+            })
+        ],
+        view: new ol.View({
+            center: ol.proj.fromLonLat([mapLng, mapLat]),
+            zoom: mapDefaultZoom
+        })
+      });
+    }
+
+    function add(lat, lng) {
+      var vectorLayer = new ol.layer.Vector({
+        source:new ol.source.Vector({
+          features: [new ol.Feature({
+                geometry: new ol.geom.Point(ol.proj.transform([parseFloat(lng), parseFloat(lat)], 'EPSG:4326', 'EPSG:3857')),
+            })]
+        }),
+        style: new ol.style.Style({
+          image: new ol.style.Icon({
+            anchor: [0.5, 0.5],
+            anchorXUnits: "fraction",
+            anchorYUnits: "fraction",
+            src: "https://upload.wikimedia.org/wikipedia/commons/e/ec/RedDot.svg"
+          })
+        })
+      });
+
+      map.addLayer(vectorLayer); 
+    }
+
+
+  </script>
+</head>
+<body onload="initialize_map(); 
+add(48.77896195414604,9.230028522859172); 
+add(48.7786801583205,9.230559183581361);
+add(48.77839084836044,9.231098387395592);
+add(48.77821941685653,9.231418825146253);
+add(48.77804116552051,9.231760731524432);
+add(48.77798478095757,9.231857591770742);
+add(48.77793479182441,9.231959233055916);
+add(48.77789216864531,9.232040697691321);
+add(48.77784976059397,9.232119391875452);
+add(48.77781607964182,9.232180591830247);
+add(48.77777605784195,9.232255409342331);
+add(48.777739956673585,9.23232386240085);
+add(48.777706621280934,9.232386290075267);
+add(48.77763025798431,9.232529500384944);
+add(48.77761124414772,9.232578962345501);
+add(48.777568643085125,9.232685348589783);
+add(48.77754476950222,9.232746865393798);
+add(48.77750088469463,9.232827356487206);
+add(48.77745878318328,9.232910790311317);
+add(48.77741595800813,9.232988600498913);
+add(48.777372755115806,9.233068552599766);
+add(48.777201514799266,9.233379369818085);
+add(48.77702467842831,9.23369803172393);
+add(48.776762657751405,9.234164000387091);
+add(48.77647984081625,9.234622534964592); 
+">
+  <div id="map" style="width: 100vw; height: 100vh;"></div>
+hallo
+</body>
+</html>

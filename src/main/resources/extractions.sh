@@ -1,8 +1,11 @@
 psql PhHhSka85GT6
 
+# scraped response files without searchtype HINDU_TEMPLE
+
+grep -R SearchResult.TYPE_ | grep -v SearchResult.TYPE_HINDU_TEMPLE | sed -n "s/responses...\([0-9]*\)\.txt.*/\1/p" | sort | uniq
+ | awk {'print "delete from temple.place_scraped where id =" $1 ";"'} > del.sql
+
 cat scanned_coordinates.csv | awk -F ';' '{print "INSERT INTO fast_scan_lola_place (scan, geom) values (1, ST_GeomFromText(\x27POINT("$1" "$2")\x27));"}'
-
-
 
 cat UncategorizedIndia.csv | awk -vFPAT='([^,]*)|("[^"]+")' -vOFS=, '{print "     INSERT INTO places_staging (name, deity, vicinity, geom) values (\x27"$1"\x27,\x27"$3"\x27,\x27"$2"\x27, ST_GeomFromText(\x27POINT("$6" "$7")\x27));"}' | sed "s/\"//g" >uc.sql
 
@@ -13,7 +16,7 @@ grep "[a-zA-z]'[a-zA-z]"
 
 # using jq command line json stuff
 
-cat temples_Orissa.csv | sed "s/|/\//g" | awk -vFPAT='([^,]*)|("[^"]+")' -vOFS=, 'print $1 "|" $2  "|"  $4  "|"  $5  "|"  $6  "|"  $4}' |
+cat temples_Orissa.csv | sed "s/|/\//g" | awk -vFPAT='([^,]*)|("[^"]+")' -vOFS=, 'print $1 "|" $2  "|"  $3  "|"  $4  "|"  $5  "|"  $6}' |
   sed "s/\"/\x27/g" | awk -F '|' '{printf "insert into places_noloc (datasource_id, proprietary_id, name, country, state, location_info) values (3, \x27%s\x27, %s, \x27India\x27, %s, %s);\n",  $1, $2, $4, $3}' \
     >orissa.sql
 
@@ -40,3 +43,4 @@ cat temple_list_Pondicheery_1.csv |
   sed "s/\"/\x27/g" | # double to single quote
   awk -F '|' '{printf "insert into places_noloc (datasource_id, proprietary_id, name, country, state, district, address, deity_name) values (6, null, %s, \x27India\x27, \x27Puducherry\x27, %s, %s, %s);\n",  $1, $3, $2, $5}' \
   > temple_list_Pondicheery_1.sql
+

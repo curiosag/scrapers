@@ -100,7 +100,7 @@ public class Nearbysearch {
     private static void store(String json, Point p, int i) {
         String name = String.format(fileNamePattern, p.lat, p.lon, i);
         System.out.println("writing " + name);
-        FileUtil.write(json, filePath + name);
+        FileUtil.writeString(json, filePath + name);
     }
 
     public static Optional<String> getPageToken(String json) {

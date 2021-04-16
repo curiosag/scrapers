@@ -1,12 +1,14 @@
 package google.maps.responseparser;
 
+import google.maps.responseparser.DIYattempt.ResponseScanner;
+import google.maps.responseparser.DIYattempt.Symbol;
 import org.junit.Test;
 
 import java.util.ArrayList;
 import java.util.List;
 
 import static org.junit.Assert.*;
-import static google.maps.responseparser.Symbol.*;
+import static google.maps.responseparser.DIYattempt.Symbol.*;
 
 public class ResponseScannerTest {
 

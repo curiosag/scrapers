@@ -1,11 +1,13 @@
 package google.maps;
 
+import util.FileUtil;
+
 import javax.imageio.ImageIO;
 import java.awt.image.BufferedImage;
-import java.io.File;
-import java.io.IOException;
+import java.io.*;
 import java.nio.file.Path;
 import java.nio.file.Paths;
+import java.util.stream.Collectors;
 
 public class IOUtil {
 
@@ -28,5 +30,9 @@ public class IOUtil {
     public static String getResourcePath() {
         Path resourceDirectory = Paths.get("src", "test", "resources");
         return resourceDirectory.toFile().getAbsolutePath();
+    }
+
+    public static String getString(String resourcePath){
+        return FileUtil.readString(getResourcePath() + "/" + resourcePath);
     }
 }

@@ -6,27 +6,32 @@ public class PlaceSearchResultItem implements Locatable {
     public final double lat;
     public final double lon;
     public final String name;
-    public final String plus_compound_code;
+    public final String global_code;
     public final String adress;
     public final String vicinity;
+    public String resultType = "null";
 
-    public PlaceSearchResultItem(Long id, String placeId, double lat, double lon, String name, String plus_compound_code, String adress, String vicinity) {
+    public void setId(Long id) {
+        this.id = id;
+    }
+
+    public PlaceSearchResultItem(Long id, String placeId, double lat, double lon, String name, String global_code, String adress, String vicinity) {
         this.id = id;
         this.placeId = placeId;
         this.lat = lat;
         this.lon = lon;
         this.name = name;
-        this.plus_compound_code = plus_compound_code;
+        this.global_code = global_code;
         this.adress = adress;
         this.vicinity = vicinity;
     }
 
-    public PlaceSearchResultItem(String placeId, double lat, double lon, String name, String plus_compound_code, String adress, String vicinity) {
+    public PlaceSearchResultItem(String placeId, double lat, double lon, String name, String global_code, String adress, String vicinity) {
         this.placeId = placeId;
         this.lat = lat;
         this.lon = lon;
         this.name = name;
-        this.plus_compound_code = plus_compound_code;
+        this.global_code = global_code;
         this.adress = adress;
         this.vicinity = vicinity;
     }
@@ -39,5 +44,20 @@ public class PlaceSearchResultItem implements Locatable {
     @Override
     public double getLongitude() {
         return lon;
+    }
+
+    @Override
+    public String toString() {
+        return "PlaceSearchResultItem{" +
+                "id=" + id +
+                ", placeId='" + placeId + '\'' +
+                ", lat=" + lat +
+                ", lon=" + lon +
+                ", name='" + name + '\'' +
+                ", global_code='" + global_code + '\'' +
+                ", adress='" + adress + '\'' +
+                ", vicinity='" + vicinity + '\'' +
+                ", resultType='" + resultType + '\'' +
+                '}';
     }
 }

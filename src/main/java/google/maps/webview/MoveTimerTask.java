@@ -1,7 +1,6 @@
 package google.maps.webview;
 
 import javafx.application.Platform;
-import javafx.scene.input.KeyCode;
 import javafx.scene.input.MouseButton;
 import javafx.scene.robot.Robot;
 

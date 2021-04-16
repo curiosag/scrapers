@@ -5,8 +5,8 @@ import google.maps.ScrapeArea;
 
 public class ScrapeJob {
     public final int id;
-    private Point currentPosition;
     public final ScrapeArea scrapeArea;
+    private Point currentPosition;
     private final ScrapeJobStore store;
 
     public ScrapeJob(int id, Point currentPosition, ScrapeArea scrapeArea, ScrapeJobStore store) {
@@ -24,10 +24,10 @@ public class ScrapeJob {
         boolean done = exceedsSouth(p);
         if (scrapeArea.contains(p) || done) {
             currentPosition = p;
-            store.setProgress(id, p);
+            store.setProgress(id, p, getPctLatitudeDone());
             if(done)
             {
-                store.releaseJob(id, true);
+                store.releaseJob(id, true, null);
             }
         }
     }
@@ -40,11 +40,14 @@ public class ScrapeJob {
         return scrapeArea.exceedsSouth(p);
     }
 
-    public boolean areaContains(Point p) {
-        return scrapeArea.contains(p);
+    public void release(String error) {
+        store.releaseJob(id, isDone(), error);
     }
 
-    public void release() {
-        store.releaseJob(id, isDone());
+    public double getPctLatitudeDone() {
+        double north = scrapeArea.getNorthernMost().lat;
+        double south = scrapeArea.getSouthernMost().lat;
+        double curr = currentPosition.lat;
+        return ((north - curr) / (north - south)) * 100;
     }
 }

@@ -1,6 +1,7 @@
 package google.maps.webview;
 
 import google.maps.webview.intercept.URLLoaderInterceptor;
+import util.StackTrace;
 
 import java.lang.instrument.Instrumentation;
 import java.util.Arrays;
@@ -23,6 +24,10 @@ public class Launcher {
         } catch (Exception e) {
             System.out.println("Scraper died from: " + e.getMessage());
             e.printStackTrace();
+            if(ScraperApplication.setUp != null && ScraperApplication.setUp.getScrapeJob() != null)
+            {
+                ScraperApplication.setUp.getScrapeJob().release(StackTrace.get(e));
+            }
             System.exit(1);
         }
     }

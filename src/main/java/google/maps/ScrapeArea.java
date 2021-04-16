@@ -31,6 +31,10 @@ public class ScrapeArea {
         return northernMost;
     }
 
+    public boolean exceedsNorth(Point p) {
+        return p.lat > getNorthernMost().lat;
+    }
+
     public boolean exceedsSouth(Point p) {
         return p.lat < getSouthernMost().lat;
     }
@@ -66,8 +70,9 @@ public class ScrapeArea {
             setupGeo();
         }
 
-        Coordinate[] linePoints = {new Coordinate( p.lat, p.lon - 30), new Coordinate( p.lat, p.lon + 30)};
+        Coordinate[] linePoints = {new Coordinate(p.lat, p.lon - 30), new Coordinate(p.lat, p.lon + 30)};
         LineString line = new LineString(new CoordinateArraySequence(linePoints), geoFactory);
+
         List<Coordinate> intersection = Arrays.asList(geo.intersection(line).getCoordinates());
         if (intersection.size() > 0) {
             if (intersection.stream().allMatch(c -> c.y < p.lon))
@@ -75,9 +80,10 @@ public class ScrapeArea {
             if (intersection.stream().allMatch(c -> c.y > p.lon))
                 return AreaExceeded.LEFT;
         }
+
         if (exceedsSouth(p))
             return AreaExceeded.SOUTH;
-        if (p.lat > getNorthernMost().lat)
+        if (exceedsNorth(p))
             return AreaExceeded.NORTH;
         return AreaExceeded.NO;
     }

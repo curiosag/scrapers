@@ -17,11 +17,11 @@ public class DummyScrapeJobStore implements ScrapeJobStore {
     }
 
     @Override
-    public void setProgress(int jobId, Point currentPosition) {
+    public void setProgress(int jobId, Point currentPosition, double pctLatitudeDone) {
     }
 
     @Override
-    public void releaseJob(int id, boolean done) {
+    public void releaseJob(int id, boolean done, String error) {
 
     }
 

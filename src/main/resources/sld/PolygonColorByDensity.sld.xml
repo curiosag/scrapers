@@ -1,0 +1,97 @@
+<?xml version="1.0" encoding="ISO-8859-1"?>
+<StyledLayerDescriptor version="1.0.0" xsi:schemaLocation="http://www.opengis.net/sld StyledLayerDescriptor.xsd"
+    xmlns="http://www.opengis.net/sld" xmlns:ogc="http://www.opengis.net/ogc" xmlns:xlink="http://www.w3.org/1999/xlink"
+    xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance">
+    <NamedLayer>
+        <UserStyle>
+            <FeatureTypeStyle>
+                <Rule>
+                    <PolygonSymbolizer>
+                        <Fill>
+                            <CssParameter name="fill">#40FF40</CssParameter>
+                        </Fill>
+                        <Stroke>
+                            <CssParameter name="stroke">#FFFFFF</CssParameter>
+                            <CssParameter name="stroke-width">2</CssParameter>
+                        </Stroke>
+                    </PolygonSymbolizer>
+                    <TextSymbolizer>
+                        <Label>
+                            <ogc:PropertyName>name</ogc:PropertyName>
+                        </Label>
+                    </TextSymbolizer>
+                </Rule>
+                <Rule>
+                    <Name>SmallPop</Name>
+                    <Title>Less Than 100</Title>
+                    <ogc:Filter>
+                        <ogc:PropertyIsLessThan>
+                            <ogc:PropertyName>count</ogc:PropertyName>
+                            <ogc:Literal>100</ogc:Literal>
+                        </ogc:PropertyIsLessThan>
+                    </ogc:Filter>
+                    <PolygonSymbolizer>
+                        <Fill>
+                            <CssParameter name="fill">#66FF66</CssParameter>
+                        </Fill>
+                    </PolygonSymbolizer>
+                </Rule>
+                <Rule>
+                    <Title>100-200</Title>
+                    <ogc:Filter>
+                        <ogc:And>
+                            <ogc:PropertyIsGreaterThanOrEqualTo>
+                                <ogc:PropertyName>count</ogc:PropertyName>
+                                <ogc:Literal>100</ogc:Literal>
+                            </ogc:PropertyIsGreaterThanOrEqualTo>
+                            <ogc:PropertyIsLessThan>
+                                <ogc:PropertyName>count</ogc:PropertyName>
+                                <ogc:Literal>200</ogc:Literal>
+                            </ogc:PropertyIsLessThan>
+                        </ogc:And>
+                    </ogc:Filter>
+                    <PolygonSymbolizer>
+                        <Fill>
+                            <CssParameter name="fill">#33CC33</CssParameter>
+                        </Fill>
+                    </PolygonSymbolizer>
+                </Rule>
+                <Rule>
+                    <Title>200-500</Title>
+                    <ogc:Filter>
+                        <ogc:And>
+                            <ogc:PropertyIsGreaterThanOrEqualTo>
+                                <ogc:PropertyName>count</ogc:PropertyName>
+                                <ogc:Literal>200</ogc:Literal>
+                            </ogc:PropertyIsGreaterThanOrEqualTo>
+                            <ogc:PropertyIsLessThan>
+                                <ogc:PropertyName>count</ogc:PropertyName>
+                                <ogc:Literal>500</ogc:Literal>
+                            </ogc:PropertyIsLessThan>
+                        </ogc:And>
+                    </ogc:Filter>
+                    <PolygonSymbolizer>
+                        <Fill>
+                            <CssParameter name="fill">#3FCFF3</CssParameter>
+                        </Fill>
+                    </PolygonSymbolizer>
+                </Rule>
+                <Rule>
+                    <Name>LargePop</Name>
+                    <Title>gt500</Title>
+                    <ogc:Filter>
+                        <ogc:PropertyIsGreaterThan>
+                            <ogc:PropertyName>count</ogc:PropertyName>
+                            <ogc:Literal>500</ogc:Literal>
+                        </ogc:PropertyIsGreaterThan>
+                    </ogc:Filter>
+                    <PolygonSymbolizer>
+                        <Fill>
+                            <CssParameter name="fill">#009900</CssParameter>
+                        </Fill>
+                    </PolygonSymbolizer>
+                </Rule>
+            </FeatureTypeStyle>
+        </UserStyle>
+    </NamedLayer>
+</StyledLayerDescriptor>

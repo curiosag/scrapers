@@ -1,11 +1,11 @@
-package google.maps.responseparser;
+package google.maps.responseparser.DIYattempt;
 
 import java.util.ArrayList;
 import java.util.Collections;
 import java.util.List;
 
-import static google.maps.responseparser.Node.nonTerminal;
-import static google.maps.responseparser.SymType.*;
+import static google.maps.responseparser.DIYattempt.Node.nonTerminal;
+import static google.maps.responseparser.DIYattempt.SymType.*;
 
 /**
  * useless redundant response parser. the data is json, one big plain nested array

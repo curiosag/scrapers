@@ -18,8 +18,10 @@ public class SetUp {
 
     public final boolean autorun;
     public int zoom;
+    public float maxGbMem;
+    public final int displayNumber;
     private ScrapeJob scrapeJob;
-    public final MarkerProcessingType markerProcessingType;
+    public final ProcessingType processingType;
 
     public SetUp(List<String> params) {
         log("parameters received: " + params);
@@ -27,21 +29,42 @@ public class SetUp {
         if (params.size() == 0)
             throw new IllegalArgumentException("No params passed");
 
+        if(params.contains("manual_search"))
+        {
+            processingType = ProcessingType.manual_search;
+            displayNumber = 0;
+            zoom = 12;
+            autorun = false;
+            maxGbMem = 6000;
+            scrapeJob = new ScrapeJob(0,  new Point(27d, 70d), null, new DummyScrapeJobStore());
+            return;
+        }
+
         autorun = params.contains("autorun");
-        markerProcessingType = params.contains(MarkerProcessingType.temple.place_type) ?
-                MarkerProcessingType.temple :
-                MarkerProcessingType.any;
+
+        processingType = params.contains(ProcessingType.marker_temple.place_type) ?
+                ProcessingType.marker_temple :
+                ProcessingType.marker_any;
 
         String errorMsg = """
-                invalid number of arguments (should be 3 or 6): %d
-                3: zoom(a number)  autorun(or not) markerprocessing("hindu_temple" or "any")
-                7: x1 y1 x2 y2 zoom autorun markerprocessing
+                invalid number of arguments (should be 4 or 8): %d
+                4: zoom(a number)  autorun(or not) markerprocessing("hindu_temple" or "any") maxGbMem
+                8: x1 y1 x2 y2 zoom autorun markerprocessing maxGbMem
                 """;
         switch (params.size()) {
-            case 3 -> setupDbJobStore(params);
-            case 7 -> setupFromParams(params);
+            case 4 -> setupDbJobStore(params);
+            case 8 -> setupFromParams(params);
             default -> throw new IllegalArgumentException(errorMsg + params.size());
         }
+
+        maxGbMem = Float.parseFloat(params.get(params.size() - 1));
+        displayNumber = getDisplayNumber();
+    }
+
+
+    private int getDisplayNumber() {
+        String n = System.getenv().get("DISPLAY");
+        return n == null ? 0 : Integer.parseInt(n.replace(":", ""));
     }
 
     private void setupFromParams(List<String> params) {
@@ -53,7 +76,7 @@ public class SetUp {
 
     private void setupDbJobStore(List<String> params) {
         zoom = Integer.parseInt(params.get(0));
-        Optional<ScrapeJob> next = new ScrapeJobDao(markerProcessingType.place_type).getNext();
+        Optional<ScrapeJob> next = new ScrapeJobDao(processingType.place_type).getNext();
         if (next.isPresent())
             scrapeJob = next.get();
         else
@@ -86,4 +109,5 @@ public class SetUp {
     public ScrapeJob getScrapeJob() {
         return scrapeJob;
     }
+
 }

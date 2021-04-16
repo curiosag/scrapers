@@ -13,21 +13,26 @@ import java.util.List;
 import static persistence.Common.createConnection;
 
 public class PlacesDao {
+
     private final Connection connection = createConnection(Const.connectionUrl, true);
 
     public List<PlaceSearchResultItem> getPlaces(int regionId) {
         String query = """
-                select p.id, p.place_id, p.name, p.plus_compound_code, p.global_code, p.vicinity, ST_AsText(p.geom) as geom
+                select p.id, p.place_id, p.name, p.address, p.global_code, p.vicinity, ST_AsText(p.geom) as geom
                 from temple.temple.place_scraped p join temple.temple.region r on r.id = %d and st_within(p.geom, r.geom) 
                 """;
 
+        return getQueryResult(String.format(query, regionId));
+    }
+
+    public List<PlaceSearchResultItem> getQueryResult(String query) {
         List<PlaceSearchResultItem> result = new ArrayList<>();
         try {
-            ResultSet r = connection.createStatement().executeQuery(String.format(query, regionId));
+            ResultSet r = connection.createStatement().executeQuery(query);
             while (r.next()) {
                 Point p = fromPointGeom(r.getString("geom"));
                 result.add(new PlaceSearchResultItem(r.getLong("id"), r.getString("place_id"), p.lat, p.lon, r.getString("name"),
-                        r.getString("plus_compound_code"), r.getString("global_code"), r.getString("vicinity")));
+                        r.getString("address"), r.getString("global_code"), r.getString("vicinity")));
             }
 
             return result;
