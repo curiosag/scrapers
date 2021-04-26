@@ -13,20 +13,16 @@
 export DISPLAY=:${1}
 Xvfb $DISPLAY -screen 0 1920x1080x16 &
 PID_XVFB=$!
-fluxbox &
+fluxbox -display $DISPLAY &
 x11vnc -display $DISPLAY -bg -forever -nopw -quiet -rfbport 59${1} &
 
-hostnm=$(hostname -I | awk '{print $1}')
-if [ ! $hostnm -eq "127.168.178.27" ]; then
-    ssh -L localhost:5432:185.128.244.228:5432 sm@185.128.244.228
-fi
 
 echo "scraper zoom:18 marker:hindu_temple display:${DISPLAY} debugport:none vncport:59${1}"
 LOGNAME="sp${DISPLAY}.log"
 LOGNAME=${LOGNAME//[:]/}
 
 while [ $? -eq 0 ]; do
-  /opt/jdk-15/bin/java -Dprism.order=sw -jar --enable-preview -javaagent:./scrapers-1.0-SNAPSHOT.jar ./Launcher-jar-with-dependencies.jar 18 autorun hindu_temple > "${LOGNAME}"  2>&1
+  /opt/jdk-15/bin/java -Dprism.order=sw -jar --enable-preview -javaagent:./scrapers-1.0-SNAPSHOT.jar ./Launcher-jar-with-dependencies.jar 18 autorun TYPE_HINDU_TEMPLE 6000 > "${LOGNAME}"  2>&1
 done
 
 function finally {

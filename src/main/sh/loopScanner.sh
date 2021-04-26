@@ -1,12 +1,32 @@
 #!/bin/bash
 
-# debug using: -agentlib:jdwp=transport=dt_socket,server=y,suspend=n,address=127.0.0.1:8000
+#remote debugging: /opt/jdk-15/bin/java -jar -agentlib:jdwp=transport=dt_socket,server=y,suspend=y,address=127.0.0.1:8000  --enable-preview /home/ssm/dev/repo/scrapers/target/scrapers-1.0-SNAPSHOT-jar-with-dependencies.jar
 
-Xvfb :99 -screen 1920x1080x16 &>/dev/null &
-export DISPLAY=:99
+# 9.82 etc ... left upper/right lower corner of rectangular area to be scraped. boundary detection and scrolling is too stupid to cope with fringes of real maps
+# autorun ... starts scraping with 10 secs delay to give the headless browser the possibility to completeley load the page
+# to debug add after -jar: -agentlib:jdwp=transport=dt_socket,server=y,suspend=y,address=127.0.0.1:8000
 
-echo "sanner zoom 15 any markers"
+# -Dprism.order=sw  ... that's hardware graphics acceleration switched off, seems to make trouble with Xvfb ("ES2 Prism: Error - GLX extension is not supported")
+
+# fluxbox ... looks like using fluxbox the browser runs smoothly, without it it gets stuck in some strange UI state
+
+ZOOM=15
+export DISPLAY=:${1}
+Xvfb $DISPLAY -screen 0 1920x1080x16 &
+PID_XVFB=$!
+fluxbox -display $DISPLAY &
+x11vnc -display $DISPLAY -bg -forever -nopw -quiet -rfbport 59${1} &
+
+echo "scraper zoom:${ZOOM} marker:any display:${DISPLAY} debugport:none vncport:59${1}"
+LOGNAME="sp${DISPLAY}.log"
+LOGNAME=${LOGNAME//[:]/}
 
 while [ $? -eq 0 ]; do
-  /opt/jdk-15/bin/java -Dprism.order=sw -jar --enable-preview -javaagent:./scrapers-1.0-SNAPSHOT.jar ./Launcher-jar-with-dependencies.jar 15 autorun any 2>&1 > scanner.log
+  /opt/jdk-15/bin/java -Dprism.order=sw -jar --enable-preview -javaagent:./scrapers-1.0-SNAPSHOT.jar ./Launcher-jar-with-dependencies.jar ${ZOOM}  autorun any 6000 > "${LOGNAME}"  2>&1
 done
+
+function finally {
+  kill -9 $PID_XVFB
+}
+
+trap finally EXIT
