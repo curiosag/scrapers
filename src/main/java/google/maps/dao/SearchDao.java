@@ -1,6 +1,6 @@
 package google.maps.dao;
 
-import google.maps.Const;
+import google.maps.CConst;
 import google.maps.Point;
 
 import java.sql.Connection;
@@ -15,7 +15,7 @@ public class SearchDao {
     public record Search(long id, double lat, double lon) {
     }
 
-    private final Connection connection = createConnection(Const.connectionUrl, true);
+    private final Connection connection = createConnection(CConst.connectionUrl, true);
 
     public void createSearches(List<Point> points) throws SQLException {
         String query = "insert into searches (lat, lon) values (%14f, %14f)";

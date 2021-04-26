@@ -16,6 +16,7 @@ PID_XVFB=$!
 fluxbox -display $DISPLAY &
 x11vnc -display $DISPLAY -bg -forever -nopw -quiet -rfbport 59${1} &
 
+ssh -L 5432:localhost:5432 sm@185.128.244.228 -N &
 
 echo "scraper zoom:18 marker:hindu_temple display:${DISPLAY} debugport:none vncport:59${1}"
 LOGNAME="sp${DISPLAY}.log"

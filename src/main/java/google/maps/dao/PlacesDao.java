@@ -1,6 +1,6 @@
 package google.maps.dao;
 
-import google.maps.Const;
+import google.maps.CConst;
 import google.maps.searchapi.PlaceSearchResultItem;
 import google.maps.Point;
 
@@ -14,7 +14,7 @@ import static persistence.Common.createConnection;
 
 public class PlacesDao {
 
-    private final Connection connection = createConnection(Const.connectionUrl, true);
+    private final Connection connection = createConnection(CConst.connectionUrl, true);
 
     public List<PlaceSearchResultItem> getPlaces(int regionId) {
         String query = """

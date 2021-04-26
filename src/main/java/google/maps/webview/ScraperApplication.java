@@ -70,8 +70,8 @@ public class ScraperApplication extends Application {
 
     private void setupAutomatedProcessing() {
         final PlaceDataSink detailsWriter = switch (setUp.processingType) {
-            case marker_temple -> new PlaceDetailsFileDbComboWriter(Const.resultFilePath + setUp.displayNumber);
-            case marker_any -> new PlaceCoordWriter(Const.scrapedDataFilePath + "/scn" + setUp.displayNumber);
+            case marker_temple -> new PlaceDetailsFileDbComboWriter(CConst.resultFilePath + setUp.displayNumber);
+            case marker_any -> new PlaceCoordWriter(CConst.scrapedDataFilePath + "/scn" + setUp.displayNumber);
             default -> throw new IllegalStateException();
         };
 

@@ -1,6 +1,6 @@
 package google.maps.dao;
 
-import google.maps.Const;
+import google.maps.CConst;
 import google.maps.Point;
 import google.maps.tileScraper.TileCoordinate;
 import google.maps.tileScraper.TileScrapeWriter;
@@ -15,7 +15,7 @@ import static persistence.Common.createConnection;
 
 public class FastScanDao implements TileScrapeWriter {
 
-    private final Connection connection = createConnection(Const.connectionUrl, true);
+    private final Connection connection = createConnection(CConst.connectionUrl, true);
     private static final String insertSql = "insert into temple.fast_scan_lola_place (geom) values(public.st_geomfromtext('POINT(%.7f %.7f)', 4326));";
 
     @Override

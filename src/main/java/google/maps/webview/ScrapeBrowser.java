@@ -136,11 +136,11 @@ class ScrapeBrowser extends Region {
     }
 
     private String getMarkedImagePath() {
-        return Const.markedImagePath + setUp.displayNumber + "/";
+        return CConst.markedImagePath + setUp.displayNumber + "/";
     }
 
     private String getResultFilePath() {
-        return Const.resultFilePath + setUp.displayNumber;
+        return CConst.resultFilePath + setUp.displayNumber;
     }
 
     private void onMoveButtonPressed(ActionEvent actionEvent) {

@@ -1,6 +1,6 @@
 package google.maps.dao;
 
-import google.maps.Const;
+import google.maps.CConst;
 import google.maps.Point;
 
 import java.sql.Connection;
@@ -13,7 +13,7 @@ import java.util.List;
 import static persistence.Common.createConnection;
 
 public class RegionsDao {
-    private final Connection connection = createConnection(Const.connectionUrl, true);
+    private final Connection connection = createConnection(CConst.connectionUrl, true);
 
     public List<List<Point>> getBoundaries(String nameField, String name) {
         String query = "select ST_AsText(geom) as geom from regions where %s = '%s'";

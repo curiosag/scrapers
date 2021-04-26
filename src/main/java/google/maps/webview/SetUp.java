@@ -64,7 +64,7 @@ public class SetUp {
 
     private int getDisplayNumber() {
         String n = System.getenv().get("DISPLAY");
-        return n == null ? 0 : Integer.parseInt(n.replace(":", ""));
+        return n == null ? 0 : Integer.parseInt(n.replace(":", "").replace(".", ""));
     }
 
     private void setupFromParams(List<String> params) {

@@ -1,6 +1,6 @@
 package google.maps.loader;
 
-import google.maps.Const;
+import google.maps.CConst;
 import google.maps.extraction.GeoJsonConverter;
 
 import java.sql.Connection;
@@ -23,7 +23,7 @@ public class SqlLoader {
         if (queries == null)
             throw new IllegalArgumentException();
 
-        Connection connection = createConnection(Const.connectionUrl, true);
+        Connection connection = createConnection(CConst.connectionUrl, true);
         String s = "";
         try {
             connection.setAutoCommit(false);

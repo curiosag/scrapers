@@ -1,6 +1,6 @@
 package google.maps.extraction;
 
-import google.maps.Const;
+import google.maps.CConst;
 import google.maps.Point;
 import google.maps.dao.GeomUtil;
 
@@ -13,7 +13,7 @@ import java.util.List;
 import static persistence.Common.createConnection;
 
 public class ClusterDao {
-    private final Connection connection = createConnection(Const.connectionUrl, true);
+    private final Connection connection = createConnection(CConst.connectionUrl, true);
 
     public record Cluster(int id, List<Point> area){}
 

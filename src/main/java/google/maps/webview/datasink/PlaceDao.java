@@ -1,6 +1,6 @@
 package google.maps.webview.datasink;
 
-import google.maps.Const;
+import google.maps.CConst;
 import google.maps.searchapi.PlaceSearchResultItem;
 
 import java.sql.Connection;
@@ -11,7 +11,7 @@ import java.sql.SQLException;
 import static persistence.Common.createConnection;
 
 public class PlaceDao {
-    private final Connection connection = createConnection(Const.connectionUrl, true);
+    private final Connection connection = createConnection(CConst.connectionUrl, true);
     private final PreparedStatement qNext;
     private final PreparedStatement qAdd;
 

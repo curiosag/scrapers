@@ -1,6 +1,6 @@
 package google.maps.dao;
 
-import google.maps.Const;
+import google.maps.CConst;
 import google.maps.Point;
 import google.maps.ScrapeArea;
 import google.maps.webview.scrapejob.ScrapeJob;
@@ -15,7 +15,7 @@ import static google.maps.ScrapeArea.getApexNorth;
 import static persistence.Common.createConnection;
 
 public class ScrapeJobDao implements ScrapeJobStore {
-    private final Connection connection = createConnection(Const.connectionUrl, false);
+    private final Connection connection = createConnection(CConst.connectionUrl, false);
     private final String place_type;
 
     public ScrapeJobDao(String place_type) {
