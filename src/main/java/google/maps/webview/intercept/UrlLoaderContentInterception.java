@@ -1,31 +1,21 @@
 package google.maps.webview.intercept;
 
-import google.maps.extraction.ResultFileExtractor;
-import google.maps.webview.datasink.FileWriter;
-
 import java.lang.reflect.Array;
 import java.lang.reflect.Field;
-import java.nio.charset.StandardCharsets;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Map;
 import java.util.concurrent.ConcurrentHashMap;
-import java.util.stream.Collectors;
 
-import static google.maps.extraction.MapPlaceDetailsResponseExtractor.extractFromMapSearchResult;
+public class UrlLoaderContentInterception {
 
-public class ManualSearchUrlLoaderInterception {
-
-    private static final String targetPath = "./manualSearchResponses";
-
-    private static final FileWriter writer = new FileWriter(targetPath);
     private static final Map<String, List<byte[]>> content = new ConcurrentHashMap<>();
 
-    public static void setUp() {
+    public static void setUp(ContentInterception c) {
 
         URLLoaderInterceptor.onSendRequest = (urlLoader, urlConnection) -> {
             String url = elicitUrl(urlLoader);
-            if (isSearchUrl(url)) {
+            if (c.urlWanted(url)) {
                 content.put(url, new ArrayList<>());
             }
             return true;
@@ -41,7 +31,8 @@ public class ManualSearchUrlLoaderInterception {
         };
 
         URLLoaderInterceptor.onFinishedLoading = urlLoader -> {
-            List<byte[]> bytes = content.get(elicitUrl(urlLoader));
+            String url = elicitUrl(urlLoader);
+            List<byte[]> bytes = content.get(url);
             if (bytes != null) {
                 int size = bytes.stream().map(Array::getLength).reduce(0, Integer::sum);
                 byte[] target = new byte[size];
@@ -53,8 +44,8 @@ public class ManualSearchUrlLoaderInterception {
                         i++;
                     }
                 }
-                content.remove(elicitUrl(urlLoader));
-                onContentReceived(new String(target, StandardCharsets.UTF_8));
+                content.remove(url);
+                c.onContentReceived(url, target);
             }
         };
     }
@@ -68,19 +59,6 @@ public class ManualSearchUrlLoaderInterception {
         } catch (NoSuchFieldException | IllegalAccessException e) {
             throw new RuntimeException(e);
         }
-    }
-
-    private static void onContentReceived(String c) {
-        if (c.contains("SearchResult.TYPE_")) {
-            List<String> csv = extractFromMapSearchResult(c).stream()
-                    .map(ResultFileExtractor::getCsv)
-                    .collect(Collectors.toList());
-            writer.writeCsvRecords(csv);
-        }
-    }
-
-    private static boolean isSearchUrl(String r) {
-        return r.contains("search?tbm=map");
     }
 
 }

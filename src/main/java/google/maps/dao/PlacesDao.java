@@ -3,6 +3,7 @@ package google.maps.dao;
 import google.maps.CConst;
 import google.maps.searchapi.PlaceSearchResultItem;
 import google.maps.Point;
+import org.intellij.lang.annotations.Language;
 
 import java.sql.Connection;
 import java.sql.ResultSet;
@@ -17,9 +18,10 @@ public class PlacesDao {
     private final Connection connection = createConnection(CConst.connectionUrl, true);
 
     public List<PlaceSearchResultItem> getPlaces(int regionId) {
+        @Language("SQL")
         String query = """
                 select p.id, p.place_id, p.name, p.address, p.global_code, p.vicinity, ST_AsText(p.geom) as geom
-                from temple.temple.place_scraped p join temple.temple.region r on r.id = %d and st_within(p.geom, r.geom) 
+                from temple.place_scraped p join temple.region r on r.id = %d and st_within(p.geom, r.geom)
                 """;
 
         return getQueryResult(String.format(query, regionId));

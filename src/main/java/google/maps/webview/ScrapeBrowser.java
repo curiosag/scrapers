@@ -69,6 +69,7 @@ class ScrapeBrowser extends Region {
 
     private final ConditionalTimer timer = new ConditionalTimer(() -> true, "mapOps", true);
     private ProcessingType processingType = ProcessingType.marker_temple;
+    private StallingMonitor monitor;
 
     public void cancel() {
         cancelled.set(true);
@@ -119,6 +120,19 @@ class ScrapeBrowser extends Region {
             }, this::onCoordinatesSeen);
         } else
             jsbridge = null;
+
+        setScrapingTimeout(30 * 60 * 1000);
+        monitor = new StallingMonitor(() -> exitApplication(scrapeJob.getCurrentPosition()));
+    }
+
+    private void setScrapingTimeout(int delay) {
+        timer.schedule(new TimerTask() {
+            @Override
+            public void run() {
+                log("Max scrape time reached, terminating.");
+                exitApplication(scrapeJob.getCurrentPosition());
+            }
+        }, delay);
     }
 
 
@@ -172,6 +186,8 @@ class ScrapeBrowser extends Region {
     private void onCoordinatesSeen(String coords) {
         if (cancelled.get())
             return;
+
+        monitor.signalProgress();
 
         String[] parts = coords.split(",");
         if (parts.length != 2)
@@ -302,7 +318,7 @@ class ScrapeBrowser extends Region {
         // create some overlap between moved map sections in order to catch markers that otherwise may be precisely at the border line
         float overlapOffset = grazingDirection == LEFT_TO_RIGHT ? -15 : 15;
         float startX = centerX + overlapOffset; // make sure that MoveTimerTask params x and startX are initially equal
-        int delay = 10;
+        int delay = 20;
         switch (grazingDirection) {
             // search window moves right, map moves left, mouse moves left
             case LEFT_TO_RIGHT -> new MoveTimerTask(startX, startX, l.x, -10, y, y, y, 0, delay, robot, next, timer).run();

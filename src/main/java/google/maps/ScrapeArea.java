@@ -15,7 +15,7 @@ public class ScrapeArea {
     private Point northernMost;
 
     private GeometryFactory geoFactory;
-    private Polygon geo;
+    public final Polygon geo;
 
     public Point getSouthernMost() {
         if (southernMost == null) {
@@ -54,22 +54,22 @@ public class ScrapeArea {
 
     public ScrapeArea(List<Point> boundaries) {
         this.boundary = boundaries;
+        geoFactory = new GeometryFactory();
+
+        Coordinate[] coordinates = boundary.stream()
+                .map(p -> new Coordinate(p.lat, p.lon))
+                .toArray(Coordinate[]::new);
+
+        geo = geoFactory.createPolygon(coordinates);
     }
 
     public boolean contains(Point p) {
-        if (geo == null) {
-            setupGeo();
-        }
         Coordinate[] point = {new Coordinate(p.lat, p.lon)};
 
         return geo.contains(new org.locationtech.jts.geom.Point(new CoordinateArraySequence(point), geoFactory));
     }
 
     public AreaExceeded exceeded(Point p) {
-        if (geo == null) {
-            setupGeo();
-        }
-
         Coordinate[] linePoints = {new Coordinate(p.lat, p.lon - 30), new Coordinate(p.lat, p.lon + 30)};
         LineString line = new LineString(new CoordinateArraySequence(linePoints), geoFactory);
 
@@ -86,16 +86,6 @@ public class ScrapeArea {
         if (exceedsNorth(p))
             return AreaExceeded.NORTH;
         return AreaExceeded.NO;
-    }
-
-    private void setupGeo() {
-        geoFactory = new GeometryFactory();
-
-        Coordinate[] coordinates = boundary.stream()
-                .map(p -> new Coordinate(p.lat, p.lon))
-                .toArray(Coordinate[]::new);
-
-        geo = geoFactory.createPolygon(coordinates);
     }
 
     public List<Point> getBoundary() {

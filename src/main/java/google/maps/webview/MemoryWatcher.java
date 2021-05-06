@@ -10,6 +10,7 @@ public class MemoryWatcher {
     private static final int mb = 1024 * 1024;
 
     public static void watch(ScrapeJob job, float maxMb) {
+        System.gc();
         if (exceedsMemBoundary(job.id, maxMb)) {
             job.release(null);
             System.exit(0);

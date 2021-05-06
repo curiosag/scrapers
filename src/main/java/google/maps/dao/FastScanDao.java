@@ -39,7 +39,7 @@ public class FastScanDao implements TileScrapeWriter {
             if (!rs.next())
                 throw new IllegalStateException();
 
-            return Optional.of(new TileCoordinate(rs.getInt(1), rs.getInt(2)));
+            return Optional.of(new TileCoordinate(rs.getInt(1), rs.getInt(2), 0));
         } catch (SQLException e) {
             throw new RuntimeException(e);
         }

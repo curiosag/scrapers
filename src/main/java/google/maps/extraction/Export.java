@@ -19,9 +19,9 @@ import java.util.stream.Stream;
 public class Export {
 
     private static final String baseQuery = """
-                select p.id, p.place_id, p.name, p.address, p.global_code, p.vicinity, ST_AsText(p.geom) as geom
-                from temple.temple.place_scraped p\040
-                """;
+            select p.id, p.place_id, p.name, p.address, p.global_code, p.vicinity, ST_AsText(p.geom) as geom
+            from temple.temple.place_scraped p\040
+            """;
     private static final String regionJoin = " join temple.temple.region r on r.id = %d and st_within(p.geom, r.geom)";
 
     public static void main(String[] args) throws IOException {
@@ -31,7 +31,7 @@ public class Export {
         //    Polygon p = asPolygon(new Area(rectangle(new Point(-2, 100), new Point(-10, 125))).getBoundary());
         //createCsv("/home/ssmertnig/temp/scrapemore/Bali.csv", p);
         String query = baseQuery + "where st_y(geom) < 0";
-        createHtml("/home/ssmertnig/dev/repo/scrapers/src/main/resources/south.html", query,"AIzaSyA_TRJKtGl2rC9sQ4Kv5Dl6XbAUkL3JS8w");
+        createHtml("/home/ssmertnig/dev/repo/scrapers/src/main/resources/south.html", query, "AIzaSyA_TRJKtGl2rC9sQ4Kv5Dl6XbAUkL3JS8w");
     }
 
     private static void createClusterHtml(String pageFullName, String apiKey) throws IOException {
@@ -54,24 +54,11 @@ public class Export {
         }
     }
 
-    private static Polygon getCountryBoundary(String countryName){
-        RegionsDao d = new RegionsDao();
-        return asPolygon(d.getStateBoundaries("name0", countryName));
-    }
-
-    private static Polygon asPolygon(List<Point> points){
-        GeometryFactory geoFactory = new GeometryFactory();
-        Coordinate[] coordinates = points.stream()
-                .map(p -> new Coordinate(p.lat, p.lon))
-                .toArray(Coordinate[]::new);
-        return geoFactory.createPolygon(coordinates);
-    }
-
-    private static Polygon getStateBoundary(String stateName){
+    private static Polygon getStateBoundary(String stateName) {
         RegionsDao d = new RegionsDao();
 
         GeometryFactory geoFactory = new GeometryFactory();
-        Coordinate[] coordinates = d.getStateBoundaries("name2", stateName).stream()
+        Coordinate[] coordinates = d.getStateBoundaries(stateName).stream()
                 .map(p -> new Coordinate(p.lat, p.lon))
                 .toArray(Coordinate[]::new);
         return geoFactory.createPolygon(coordinates);
@@ -111,7 +98,7 @@ public class Export {
                 )
                 .collect(Collectors.joining(",\n"));
 
-        if(!(circleCenters.isEmpty() && polyCoords.isEmpty()))
+        if (!(circleCenters.isEmpty() && polyCoords.isEmpty()))
             throw new IllegalStateException("Implementation with openlayers needs adaption!");
 
         String circles = IntStream.rangeClosed(0, circleCenters.size() - 1).boxed()
@@ -119,7 +106,7 @@ public class Export {
                 .collect(Collectors.joining(",\n"));
 
         String p = places.stream()
-                .map(i -> String.format("add(%.10f, %.10f);",  i.getLongitude(), i.getLatitude()))
+                .map(i -> String.format("add(%.10f, %.10f);", i.getLongitude(), i.getLatitude()))
                 .collect(Collectors.joining("\n"));
 
         return page.replace("circleDataHere!", circles)

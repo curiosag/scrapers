@@ -5,6 +5,7 @@ import google.maps.ScrapeArea;
 import google.maps.dao.ScrapeJobDao;
 import google.maps.webview.scrapejob.DummyScrapeJobStore;
 import google.maps.webview.scrapejob.ScrapeJob;
+import util.ProcessUtil;
 import util.Tuple;
 
 import java.util.List;
@@ -25,7 +26,7 @@ public class SetUp {
 
     public SetUp(List<String> params) {
         log("parameters received: " + params);
-
+        log("kill " + ProcessUtil.getPid() + " to stop this.");
         if (params.size() == 0)
             throw new IllegalArgumentException("No params passed");
 

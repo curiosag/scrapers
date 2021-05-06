@@ -17,12 +17,5 @@
       <jdbc-url>jdbc:postgresql://fat:5432/temple</jdbc-url>
       <working-dir>$ProjectFileDir$</working-dir>
     </data-source>
-    <data-source source="LOCAL" name="sshtunnel temples@fat" uuid="bfd27f1e-cdaa-4dab-ba36-d2e28e7cb455">
-      <driver-ref>postgresql</driver-ref>
-      <synchronize>true</synchronize>
-      <jdbc-driver>org.postgresql.Driver</jdbc-driver>
-      <jdbc-url>jdbc:postgresql://localhost:65535/temple</jdbc-url>
-      <working-dir>$ProjectFileDir$</working-dir>
-    </data-source>
   </component>
 </project>

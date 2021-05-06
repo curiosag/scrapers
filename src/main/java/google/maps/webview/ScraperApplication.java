@@ -3,8 +3,9 @@ package google.maps.webview;
 import google.maps.webview.datasink.PlaceCoordWriter;
 import google.maps.webview.datasink.PlaceDataSink;
 import google.maps.webview.datasink.PlaceDetailsFileDbComboWriter;
-import google.maps.webview.intercept.ManualSearchUrlLoaderInterception;
+import google.maps.webview.intercept.ManualSearchContentInterception;
 import google.maps.webview.intercept.URLLoaderInterceptor;
+import google.maps.webview.intercept.UrlLoaderContentInterception;
 import javafx.application.Application;
 import javafx.application.Platform;
 import javafx.embed.swing.SwingFXUtils;
@@ -62,9 +63,9 @@ public class ScraperApplication extends Application {
     }
 
     private void setupUrlLoaderInterceptor() {
-        if (setUp.processingType == ProcessingType.manual_search)
-            ManualSearchUrlLoaderInterception.setUp();
-        else
+        if (setUp.processingType == ProcessingType.manual_search) {
+            UrlLoaderContentInterception.setUp(new ManualSearchContentInterception());
+        } else
             setupAutomatedProcessing();
     }
 

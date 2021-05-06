@@ -14,21 +14,31 @@ import java.util.logging.Logger;
 
 public class Launcher {
 
+    private static class ShutDownHook extends Thread {
+        public void run() {
+            releaseJob(null);
+        }
+    }
+
     public static void main(String[] args) throws Exception {
         try {
             if (Arrays.asList(args).contains("headless")) {
                 //setHeadless();
             }
             ScraperApplication.main(args);
+            Runtime.getRuntime().addShutdownHook(new ShutDownHook());
             System.exit(0);
         } catch (Exception e) {
             System.out.println("Scraper died from: " + e.getMessage());
             e.printStackTrace();
-            if(ScraperApplication.setUp != null && ScraperApplication.setUp.getScrapeJob() != null)
-            {
-                ScraperApplication.setUp.getScrapeJob().release(StackTrace.get(e));
-            }
+            releaseJob(StackTrace.get(e));
             System.exit(1);
+        }
+    }
+
+    private static void releaseJob(String errorMsg) {
+        if (ScraperApplication.setUp != null && ScraperApplication.setUp.getScrapeJob() != null) {
+            ScraperApplication.setUp.getScrapeJob().release(errorMsg);
         }
     }
 

@@ -12,7 +12,7 @@ import java.util.Optional;
 import java.util.Scanner;
 
 public class TileScrapeFileWriter implements TileScrapeWriter {
-    private final String destFile ;
+    private final String destFile;
     private final String savePointFile;
 
     public TileScrapeFileWriter(String destFile) {
@@ -49,12 +49,12 @@ public class TileScrapeFileWriter implements TileScrapeWriter {
 
     @Override
     public Optional<TileCoordinate> getSafePoint() {
-        if (! Files.exists(Path.of(savePointFile)))
+        if (!Files.exists(Path.of(savePointFile)))
             return Optional.empty();
 
         Scanner scanner = new Scanner(savePointFile);
         scanner.useDelimiter(";");
-        return Optional.of(new TileCoordinate(scanner.nextInt(), scanner.nextInt()));
+        return Optional.of(new TileCoordinate(scanner.nextInt(), scanner.nextInt(), 0));
     }
 
 }

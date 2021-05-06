@@ -21,7 +21,7 @@ echo "scraper zoom:${ZOOM} marker:any display:${DISPLAY} debugport:none vncport:
 LOGNAME="sp${DISPLAY}.log"
 LOGNAME=${LOGNAME//[:]/}
 
-while [ $? -eq 0 ]; do
+while [ $? -ge 0 ]; do
   /opt/jdk-15/bin/java -Dprism.order=sw -jar --enable-preview -javaagent:./scrapers-1.0-SNAPSHOT.jar ./Launcher-jar-with-dependencies.jar ${ZOOM}  autorun any 6000 > "${LOGNAME}"  2>&1
 done
 

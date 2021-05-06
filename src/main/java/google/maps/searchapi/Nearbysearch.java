@@ -63,7 +63,7 @@ public class Nearbysearch {
     public static void createSearchCircles(double latLeftUpper, double lonLeftUpper, double latRightLower, double lonRightLower, String state) {
         RegionsDao rd = new RegionsDao();
 
-        List<Point> boundaries = rd.getStateBoundaries("name0", state);
+        List<Point> boundaries = rd.getStateBoundaries(state);
         ScrapeArea area = new ScrapeArea(boundaries);
 
         if (boundaries.size() == 0) {

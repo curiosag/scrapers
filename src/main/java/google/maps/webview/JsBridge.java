@@ -4,6 +4,7 @@ import javafx.beans.value.ObservableValue;
 import javafx.concurrent.Worker;
 import javafx.scene.web.WebEngine;
 import netscape.javascript.JSObject;
+import org.intellij.lang.annotations.Language;
 
 import java.util.function.BiConsumer;
 import java.util.function.Consumer;
@@ -30,7 +31,7 @@ public class JsBridge {
                         webEngine.executeScript(xmlrequestDoneInterceptor);
                         webEngine.executeScript(contextMenuObserver);
                         cssTweaks.styleIds(webEngine, "vasquette", "minimap", "fineprint", "searchbox");
-                        cssTweaks.styleClasses(webEngine, "section-layout","searchbox-icon", "section-cardbox", "app-viewcard-strip", "widget-pane-toggle-button-container", "section-promo-card-text-container");
+                        cssTweaks.styleClasses(webEngine, "section-layout", "searchbox-icon", "section-cardbox", "app-viewcard-strip", "widget-pane-toggle-button-container", "section-promo-card-text-container");
                     }
                 });
     }
@@ -43,28 +44,30 @@ public class JsBridge {
         onResponse.accept(headers, body);
     }
 
-    public void onContextMenuItem(String value){
+    public void onContextMenuItem(String value) {
         onContextMenuItem.accept(value);
     }
 
+    @Language("JavaScript")
     private final String xmlrequestStartInterceptor = """
             var g_initial_loading_finished = false;
                         
             ((() => {
-                        const open = XMLHttpRequest.prototype.open;            
+                        const open = XMLHttpRequest.prototype.open;
                         XMLHttpRequest.prototype.open = function(method, url, ...rest) {
-                            jsbridge.urlLoading(method, url);   
+                            jsbridge.urlLoading(method, url);
                             
-                            g_initial_loading_finished = g_initial_loading_finished || url.indexOf('/maps/preview/merchantstatus') >= 0;                              
-                            if((! g_initial_loading_finished) || url.indexOf('/maps/preview/place?') >= 0) {          
+                            g_initial_loading_finished = g_initial_loading_finished || url.indexOf('/maps/preview/merchantstatus') >= 0;
+                            if((! g_initial_loading_finished) || url.indexOf('/maps/preview/place?') >= 0) {
                                 return open.call(this, method, url, ...rest);
-                            } else {                              
+                            } else {
                                 return null;
-                            };
+                            }
                         };
                     }))();
                     """;
 
+    @Language("JavaScript")
     private final String xmlrequestDoneInterceptor = """
             ((() => {
                         const origOpen = XMLHttpRequest.prototype.open;
@@ -77,6 +80,7 @@ public class JsBridge {
                     }))();
                     """;
 
+    @Language("JavaScript")
     private final String contextMenuObserver = """
             ((() => {
                         const mobserver = new MutationObserver(function (mutations) {

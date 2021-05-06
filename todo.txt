@@ -2,8 +2,18 @@ invalid regions: select * from temple.region where not st_isvalid(geom);
 missing districts
 
 
-Pango:ERROR:../pango/pango-context.c:1441:itemize_state_process_run: assertion failed: (state->run_end != state->run_start)
-Bail out! Pango:ERROR:../pango/pango-context.c:1441:itemize_state_process_run: assertion failed: (state->run_end != state->run_start)
-upgrade to 17-ea+7
+JS console: org.locationtech.jts.geom.TopologyException: found non-noded intersection between LINESTRING ( 15.72041 73.94800615340084, 15.73187620191773 73.92955501922509 ) and LINESTRING ( 15.73646564644477 73.95367371815732, 15.725454714922398 73.9398883204358 ) [ (15.725454714922398, 73.9398883204358, NaN) ]
 
-and java 16
+job 11000
+
+
+188624 122081
+188625 122081
+188625 122082
+
+
+187651 121561
+https://www.google.com/maps/vt/pb=!1m4!1m3!1i18!2i187651!3i121561!2m3!1e0!2sm!3i556278780!3m7!2sro!5e1105!12m4!1e68!2m2!1sset!2sRoadmap!4e1!5m4!1e4!8m2!1e0!1e1!6m7!1e12!2i2!26m1!4b1!39b1!44e1!50e0!23i10203575!23i1381938!23i1371340!23i1381033!23i1368782!23i1368785!23i1385853!23i46990830!23i46990704!23i1375050!23i4536287!28i556
+
+
+https://www.google.com/maps/vt/pb=!1m4!1m3!1i15!2i17848!3i11295!2m3!1e0!2sm!3i556278264!3m7!2sro!5e1105!12m4!1e68!2m2!1sset!2sRoadmap!4e1!5m4!1e4!8m2!1e0!1e1!6m7!1e12!2i2!26m1!4b1!39b1!44e1!50e0!23i10203575!23i1381938!23i1371340!23i1381033!23i1368782!23i1368785!23i1385853!23i46990830!23i46990704!23i1375050!23i4536287!28i556

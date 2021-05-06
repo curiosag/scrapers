@@ -15,7 +15,11 @@ public class GeomUtil {
             if (lola.length != 2) {
                 throw new IllegalStateException();
             }
-            points.add(new Point(Double.parseDouble(lola[1]), Double.parseDouble(lola[0])));
+            try {
+                points.add(new Point(Double.parseDouble(lola[1]), Double.parseDouble(lola[0])));
+            } catch (NumberFormatException e) {
+                e.printStackTrace();
+            }
         }
         return points;
     }

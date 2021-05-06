@@ -13,6 +13,8 @@ import javax.imageio.ImageReader;
 import javax.imageio.stream.ImageInputStream;
 import java.awt.*;
 import java.awt.image.BufferedImage;
+import java.io.File;
+import java.io.FileOutputStream;
 import java.io.IOException;
 import java.net.HttpURLConnection;
 import java.net.InetSocketAddress;
@@ -96,6 +98,26 @@ public final class HttpUtil {
 
         param.setSourceRegion(new Rectangle(0, 0, width, height));
         return reader.read(0, param);
+    }
+
+    public static void saveResponse(String url, int timeout, Proxy proxy, String targetPath) throws IOException {
+        HttpURLConnection conn;
+        if (proxy == null)
+            conn = (HttpURLConnection) new URL(url).openConnection();
+        else
+            conn = (HttpURLConnection) new URL(url).openConnection(proxy);
+
+        conn.setInstanceFollowRedirects(true);
+        conn.setConnectTimeout(timeout);
+        conn.connect();
+
+        try(FileOutputStream out = new FileOutputStream(targetPath)) {
+            byte[] buffer = new byte[8 * 1024];
+            int bytesRead;
+            while ((bytesRead = conn.getInputStream().read(buffer)) != -1) {
+                out.write(buffer, 0, bytesRead);
+            }
+        }
     }
 
     public static synchronized String getBySelenium(String url) {

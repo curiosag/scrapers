@@ -1,0 +1,139 @@
+Ports on fritzbox
+5432 postgres
+22 ssh  server
+80 http  server
+443 https  server
+21 ftp server
+
+# ssh access
+#disable docker
+snap-docker-796.mount                      enabled         enabled      
+snap.docker.dockerd.service                enabled         enabled 
+
+ssh-keygen # use default id_rsa
+ssh-copy-id  sm@192.168.178.27
+
+sudo apt-get instll lxqt # some desktop
+startlxqt # for X11 remote sessions
+sud aptg-get install postgis
+
+# allow connections from all ips in pg_hba.conf
+host    all             all             0.0.0.0/0               md5
+
+# setup postgis stuff
+sudo su - postgres 
+psql
+
+\l # ... list databases
+\du # ... list users
+
+postgres=# create user sm with password 'sm';
+postgres-# create database temple;
+postgres-# grant all privileges on database temple to sm;
+
+\connect temple;
+CREATE EXTENSION postgis;
+CREATE EXTENSION postgis_raster;
+CREATE EXTENSION postgis_topology;
+CREATE EXTENSION postgis_sfcgal;
+CREATE EXTENSION fuzzystrmatch;
+CREATE EXTENSION address_standardizer;
+CREATE EXTENSION address_standardizer_data_us;
+CREATE EXTENSION postgis_tiger_geocoder;
+
+# occasionally update 
+ALTER EXTENSION postgis UPDATE;
+ALTER EXTENSION postgis_topology UPDATE;
+...
+SET search_path TO temple,public;
+
+# user
+create user basuki with password '...';
+create group standard with user basuki;
+grant select, insert, update on all tables in schema temple to standard;
+GRANT USAGE, SELECT ON ALL SEQUENCES IN SCHEMA temple to standard;
+grant create on schema temple to standard;
+
+
+# add repo for pgg-admin
+curl https://www.pgadmin.org/static/packages_pgadmin_org.pub | sudo apt-key add
+sudo sh -c 'echo "deb https://ftp.postgresql.org/pub/pgadmin/pgadmin4/apt/$(lsb_release -cs) pgadmin4 main" > /etc/apt/sources.list.d/pgadmin4.list && apt update'
+
+# create & connect basuki
+ssh -i id_rsa basuki@fat
+
+    # create jail for basuki
+
+    
+# io directory for postgres
+groupadd pg_fileio
+usermod -a -G pg_fileio sm 
+usermod -a -G pg_fileio basuki
+usermod -a -G pg_fileio postgres
+
+mkdir /var/pg_fileio
+chown pg_fileio:pg_fileio ./pg_fileio
+    
+## repeatedly set privileges for files
+sudo cp /home/ssmertnig/dev/repo/scrapers/src/main/sh/pg_io_set_privileges.sh /usr/local/src/
+sudo vi /etc/systemd/system/pg_fileio.service
+
+[Unit]
+Description=pg_fileio
+StartLimitIntervalSec=0
+
+[Service]
+User=postgres
+Type=simple
+Restart=always
+RestartSec=1
+User=serviceuser
+ExecStartPre=
+ExecStart=/usr/local/src/pg_fileio.service
+ExecStartPost
+ExecStop=
+ExecReload=
+
+[Install]
+WantedBy=multi-user.target       # ... wichtig, sonst lässt sich der nicht per systemctl enablen
+    
+
+enable and start:
+sudo systemctl enable  pg_fileio
+sudo systemctl start   pg_fileio
+
+## reverse shell job
+
+## powermanagement off
+sudo systemctl mask sleep.target suspend.target hibernate.target hybrid-sleep.target
+
+
+vielleicht in /etc/systemd/logind.conf
+
+HandleSuspendKey=ignore
+HandleHibernateKey=ignore
+HandleLidSwitch=ignore
+HandleLidSwitchExternalPower=ignore
+HandleLidSwitchDocked=ignore
+
+
+# php4 stuff
+
+data directories per user: /var/lib/pgadmin/storage/stefan.smertnig_gmail.com
+
+# set up samba
+  sudo apt install samba
+  sudo vi /etc/samba/smb.conf
+  sudo service smbd restart
+  sudo ufw allow samba
+  sudo smbpasswd -a <username> # add samba passwords for os users
+  
+# iptables
+iptables -L .. list stuff
+
+iptables -P FORWARD DROP
+
+-A INPUT -s 127.0.0.1 -j ACCEPT
+-A INPUT -s 91.115.2.72 -j ACCEPT
+-A INPUT -s 192.168.178.57/24 -j ACCEPT
+-A INPUT -p tcp --destination-port {5432} -j DROP
