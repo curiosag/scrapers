@@ -83,15 +83,15 @@ public class JsBridge {
     @Language("JavaScript")
     private final String contextMenuObserver = """
             ((() => {
-                        const mobserver = new MutationObserver(function (mutations) {
-                               var menuentry = document.querySelector('.action-menu-entry-text');
-                               if(menuentry)
-                                   jsbridge.onContextMenuItem(menuentry.innerText)
-                           });
-                           
-                        mobserver.observe(document.getElementById('hovercard'), {attributes: true, childList: true, subtree: true});
-                    }))();
-                    """;
+                const mobserver = new MutationObserver(function (mutations) {
+                    var menuentry = document.querySelector('.mapsTactileClientActionmenu__action-menu-entry-text');
+                    if(menuentry)
+                       jsbridge.onContextMenuItem(menuentry.innerText)
+                });
+
+                mobserver.observe(document.getElementById('hovercard'), {attributes: true, childList: true, subtree: true});
+            }))();
+            """;
 
 
 }

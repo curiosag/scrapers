@@ -129,7 +129,7 @@ class ScrapeBrowser extends Region {
         timer.schedule(new TimerTask() {
             @Override
             public void run() {
-                log("Max scrape time reached, terminating.");
+                log("Max scrape time reached, terminating this round.");
                 exitApplication(scrapeJob.getCurrentPosition());
             }
         }, delay);
@@ -318,7 +318,7 @@ class ScrapeBrowser extends Region {
         // create some overlap between moved map sections in order to catch markers that otherwise may be precisely at the border line
         float overlapOffset = grazingDirection == LEFT_TO_RIGHT ? -15 : 15;
         float startX = centerX + overlapOffset; // make sure that MoveTimerTask params x and startX are initially equal
-        int delay = 20;
+        int delay = 8;
         switch (grazingDirection) {
             // search window moves right, map moves left, mouse moves left
             case LEFT_TO_RIGHT -> new MoveTimerTask(startX, startX, l.x, -10, y, y, y, 0, delay, robot, next, timer).run();
@@ -369,7 +369,7 @@ class ScrapeBrowser extends Region {
         float overlapOffset = -15;
         float startY = l.y + l.h + overlapOffset; // make sure that MoveTimerTask y and startY are initially equal
         float x = l.x + 500; // avoid the hidden map elements
-        int delay = 30;
+        int delay = 15;
         new MoveTimerTask(x, x, x, 0, startY, startY, l.y, -10, delay, robot, andThen, timer).run();
     }
 
