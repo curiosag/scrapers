@@ -84,7 +84,7 @@ public class JsBridge {
     private final String contextMenuObserver = """
             ((() => {
                 const mobserver = new MutationObserver(function (mutations) {
-                    var menuentry = document.querySelector('.mapsTactileClientActionmenu__action-menu-entry-text');
+                    var menuentry = document.querySelector('.nbpPqf-menu-x3Eknd-text');
                     if(menuentry)
                        jsbridge.onContextMenuItem(menuentry.innerText)
                 });

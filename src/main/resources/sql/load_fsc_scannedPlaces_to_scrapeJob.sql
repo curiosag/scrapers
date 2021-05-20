@@ -1,15 +1,29 @@
-insert into fsc_area(geom, type)
-select ST_GeometryN(geom,27), 1 from temple.region where name = 'India';
+copy fsc_staging
+    from '/var/pg_fileio/centralIndiaFat.csv'
+delimiter ';' quote '"' CSV;
+
+select count(1) from fsc_staging;
+
+insert into history_fsc_place select * from fsc_place on conflict do nothing ;
+delete from fsc_place;
+insert into fsc_place (geom) select st_setsrid(st_point(lo, la), 4326) from fsc_staging;
+
+insert into fsc_area(geom)
+select ST_GeometryN(geom,28) from temple.region where name = 'India';
 
 select st_numgeometries(geom) from temple.region where name = 'India';
 
-delete from fsc_area where type is null;
+insert into history_scrape_job
+select id, area, busy, current_lat, current_lon, started, finished, place_type, batch
+from temple.scrape_job;
+
+delete from temple.scrape_job;
 
 select min(id) from fsc_area;
-select max(id) from temple.scrape_job;
+select max(id) from history_scrape_job; --
 
-insert into temple.scrape_job(id, area, busy, current_lat, current_lon, started, finished, clst_id, place_type, batch)
-select (select max(id) from temple.scrape_job) + (fsc.id - (select min(id) from fsc_area) + 1),geom, 0, 0,0,null,null, 0,'any', 6
+insert into temple.scrape_job(id, area, busy, current_lat, current_lon, started, finished, place_type, batch)
+select (select max(id) from history_scrape_job) + (fsc.id - (select min(id) from fsc_area) + 1),geom, 0, 0,0,null, null, 'any', 7
 from fsc_area fsc;
 
 create table history_scrape_job as select * from temple.scrape_job;
@@ -64,10 +78,10 @@ delete from fsc_grid;
 delete from fsc_grid_1;
 delete from fsc_grid_2;
 
-insert into fsc_grid_2
+insert into fsc_grid_1
 select distinct sq.geom from
     st_squaregrid(
-            0.16, --0.02
+            0.045, --0.02
             (select ST_Envelope(r.geom)
              from temple.region r where name = 'India')
         ) as sq
@@ -77,12 +91,52 @@ select distinct sq.geom from
 create index fsc_grid_1_geom_idx on fsc_grid_1 using gist(geom);
 create index fsc_grid_2_geom_idx on fsc_grid_2 using gist(geom);
 
-delete from g2;
-insert into g2(geom)
-select distinct g2.geom as geom from fsc_grid_1 g1 join fsc_grid_2 g2 on st_within(g1.geom, g2.geom)
-                                                   join fsc_cluster_nonoverlapping c on trunc(area * 1000000) > 50000 and st_within(g2.geom, c.geom)
+select count(1) from fsc_grid_2;
+
+delete from fsc_area_selected;
+
+insert into fsc_area_selected(geom, area)
+select distinct g2.geom,  st_area(g2.geom) as geom from fsc_grid_1 g1 join fsc_grid_2 g2 on st_within(g1.geom, g2.geom)
 group by g2.geom
 having count(1) = 4;
+
+insert into fsc_area_selected(geom, area)
+select distinct g1.geom,  st_area(g1.geom) as geom from fsc_grid_1 g1 where not exists(
+    select 1 from fsc_area_selected s where st_within(g1.geom, s.geom));
+
+insert into temple.scrape_job(area, busy, current_lat, current_lon, started, finished, place_type, batch)
+select geom, 0, 0,0,null, null, 'TYPE_HINDU_TEMPLE', 7
+from fsc_area_selected fsc;
+
+
+insert into fsc_area_selected (geom, area)
+select distinct g.geom, st_area(g.geom) -- distinct: join creates strange blow-up
+from fsc_grid g
+         join fsc_cluster_nonoverlapping c on trunc(area * 1000000) > 50000 and st_intersects(g.geom, c.geom)
+where not exists (select 1 from fsc_area_selected sel where st_within(g.geom, sel.geom));
+
+
+insert into temple.scrape_job(area, busy, current_lat, current_lon, started, finished, place_type, batch)
+select geom, 0, 0,0,null, null, 'TYPE_HINDU_TEMPLE', 7
+from fsc_grid_2 fsc;
+
+
+
+
+
+create table g1
+select distinct g2.geom as geom from fsc_grid_1 g1 join fsc_grid_2 g2 on st_within(g1.geom, g2.geom)
+                                                   join fsc_cluster_nonoverlapping c
+                                                        on trunc(area * 1000000) > 50000 and st_within(g2.geom, c.geom)
+
+
+create table g2 as
+select distinct g2.geom as geom from fsc_grid_1 g1 join fsc_grid_2 g2 on st_within(g1.geom, g2.geom)
+                                                   join fsc_cluster_nonoverlapping c
+                                                       on trunc(area * 1000000) > 50000 and st_within(g2.geom, c.geom)
+group by g2.geom
+having count(1) = 4;
+
 create index g2_geom_idx on g2 using gist(geom);
 
 select count(1) from g2;
