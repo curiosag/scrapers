@@ -87,7 +87,8 @@ public class ScraperApplication extends Application {
 
     @Override
     public void stop() throws Exception {
-        setUp.getScrapeJob().release(null);
+        if (setUp.processingType != ProcessingType.manual_search)
+            setUp.getScrapeJob().release(null);
         super.stop();
     }
 

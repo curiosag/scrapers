@@ -1,5 +1,7 @@
 package google.maps.searchapi;
 
+import java.util.List;
+
 public class PlaceSearchResultItem implements Locatable {
     public Long id;
     public final String placeId;
@@ -9,6 +11,7 @@ public class PlaceSearchResultItem implements Locatable {
     public final String global_code;
     public final String adress;
     public final String vicinity;
+    public final List<String> phone;
     public String resultType = "null";
 
     public void setId(Long id) {
@@ -24,6 +27,7 @@ public class PlaceSearchResultItem implements Locatable {
         this.global_code = global_code;
         this.adress = adress;
         this.vicinity = vicinity;
+        this.phone = null;
     }
 
     public PlaceSearchResultItem(String placeId, double lat, double lon, String name, String global_code, String adress, String vicinity) {
@@ -34,6 +38,18 @@ public class PlaceSearchResultItem implements Locatable {
         this.global_code = global_code;
         this.adress = adress;
         this.vicinity = vicinity;
+        this.phone = null;
+    }
+
+    public PlaceSearchResultItem(String placeId, double lat, double lon, String name, String global_code, String adress, String vicinity, List<String> phone) {
+        this.placeId = placeId;
+        this.lat = lat;
+        this.lon = lon;
+        this.name = name;
+        this.global_code = global_code;
+        this.adress = adress;
+        this.vicinity = vicinity;
+        this.phone = phone;
     }
 
     @Override

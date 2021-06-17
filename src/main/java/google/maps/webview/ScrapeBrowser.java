@@ -115,14 +115,15 @@ class ScrapeBrowser extends Region {
         webEngine.load(url);
         maybeAutorun(autorun);
 
-        if (setUp.processingType != ProcessingType.manual_search) {
+        if (setUp.processingType == ProcessingType.manual_search) {
+            jsbridge = null;
+        } else {
             jsbridge = new JsBridge(webEngine, this::onUrlSeen, (hu, ha) -> {
             }, this::onCoordinatesSeen);
-        } else
-            jsbridge = null;
+            monitor = new StallingMonitor(() -> exitApplication(scrapeJob.getCurrentPosition()));
+        }
 
         setScrapingTimeout(30 * 60 * 1000);
-        monitor = new StallingMonitor(() -> exitApplication(scrapeJob.getCurrentPosition()));
     }
 
     private void setScrapingTimeout(int delay) {
@@ -229,6 +230,8 @@ class ScrapeBrowser extends Region {
         cancel();
         try {
             scrapeJob.release(null);
+        } catch (Exception e) {
+            System.exit(1);
         } finally {
             Platform.runLater(Platform::exit);
             timer.schedule(new TimerTask() {
@@ -329,7 +332,12 @@ class ScrapeBrowser extends Region {
 
     void checkAndTurn() {
         if (isDone()) {
-            scrapeJob.release(null);
+            try {
+                scrapeJob.release(null);
+            } catch (Exception e) {
+                System.exit(0);
+            }
+
             exitApplication(scrapeJob.getCurrentPosition());
         } else {
             schedule(() -> {

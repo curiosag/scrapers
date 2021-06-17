@@ -28,10 +28,10 @@ public class ScrapeJobDao implements ScrapeJobStore {
         @Language ("SQL")
         String query = """
                 select id, public.ST_AsText(area) as area, current_lat, current_lon, started from temple.scrape_job
-                where place_type='%s' and finished is null and busy=0 limit 1 for update
+                where place_type='%s' and finished is null and busy=0 and attempts < 12 limit 1 for update
                 """;
         @Language ("SQL")
-        String setBusy = "update temple.scrape_job set busy=1, started=CURRENT_TIMESTAMP where id=";
+        String setBusy = "update temple.scrape_job set busy=1, attempts = attempts + 1, started=CURRENT_TIMESTAMP where id=";
 
         try {
             try {

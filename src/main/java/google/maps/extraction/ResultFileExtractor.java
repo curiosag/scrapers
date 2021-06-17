@@ -67,11 +67,14 @@ public class ResultFileExtractor {
         }
     }
 
-    private static final String csvRowTemplate = "%d,%s,\"%s\",\"%s\",\"%s\",\"%s\",%.14f,%.14f,%s\n";
+    private static final String csvRowTemplate = "%d,%s,\"%s\",\"%s\",\"%s\",\"%s\",%.14f,%.14f,%s";
 
     public static String getCsv(PlaceSearchResultItem i) {
-        return String.format(csvRowTemplate, i.id,i.placeId, i.name, i.global_code, i.adress,
+        String result= String.format(csvRowTemplate, i.id,i.placeId, i.name, i.global_code, i.adress,
                 i.vicinity, i.lat, i.lon, i.resultType);
+        if (i.phone != null)
+            result = result + "," + String.join(",", i.phone);
+        return result + '\n';
     }
 
     private static final String insertPlace = "insert into temple.place_scraped (place_id, name, global_code, address, vicinity, geom) values ('%s','%s','%s','%s','%s', ST_GeomFromText('POINT(%.14f %.14f)', 4326)) ON CONFLICT (place_id) DO NOTHING;\n";

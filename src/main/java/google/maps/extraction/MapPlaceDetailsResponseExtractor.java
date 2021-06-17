@@ -4,11 +4,13 @@ import com.fasterxml.jackson.databind.JsonNode;
 import google.maps.responseparser.JsonResponse;
 import google.maps.searchapi.PlaceSearchResultItem;
 
+import java.util.ArrayList;
 import java.util.List;
 import java.util.Optional;
 import java.util.stream.Collectors;
 
 import static google.maps.responseparser.JsonResponse.getChildren;
+import static google.maps.responseparser.JsonResponse.getTextValue;
 
 public class MapPlaceDetailsResponseExtractor {
 
@@ -60,10 +62,26 @@ public class MapPlaceDetailsResponseExtractor {
             String address = JsonResponse.getValue(n, 18).orElse("").replace(name + ",", "").trim();
             String vicinity = JsonResponse.getValue(n, 14).orElse("");
             String placeID = JsonResponse.getValue(n, 78).orElse("");
-            PlaceSearchResultItem result = new PlaceSearchResultItem(placeID, lat, lon, name, "", address, vicinity);
+            List<String> phone = tel(node);
+            PlaceSearchResultItem result = new PlaceSearchResultItem(placeID, lat, lon, name, "", address, vicinity, phone);
             result.resultType = JsonResponse.getValue(n, 88, 1).orElse("");
             return result;
         });
+    }
+
+    private static List<String> tel(JsonNode n) {
+        return rtel(n, new ArrayList<>());
+    }
+
+    private static List<String> rtel(JsonNode n, List<String> collector) {
+        String val = getTextValue(n);
+        if (val.contains("+91")) {
+            val = val.replace("tel:", "").replace(" ", "");
+            if (!collector.contains(val))
+                collector.add(val);
+        }
+        getChildren(n).forEach(i -> rtel(i, collector));
+        return collector;
     }
 
 }

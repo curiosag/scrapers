@@ -38,7 +38,12 @@ public class Launcher {
 
     private static void releaseJob(String errorMsg) {
         if (ScraperApplication.setUp != null && ScraperApplication.setUp.getScrapeJob() != null) {
-            ScraperApplication.setUp.getScrapeJob().release(errorMsg);
+            try {
+                ScraperApplication.setUp.getScrapeJob().release(errorMsg);
+            } catch(Exception e)
+            {
+                System.exit(1);
+            }
         }
     }
 

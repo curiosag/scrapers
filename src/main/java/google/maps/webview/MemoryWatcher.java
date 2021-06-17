@@ -12,8 +12,11 @@ public class MemoryWatcher {
     public static void watch(ScrapeJob job, float maxMb) {
         System.gc();
         if (exceedsMemBoundary(job.id, maxMb)) {
-            job.release(null);
-            System.exit(0);
+            try {
+                job.release(null);
+            } catch (Exception e) {
+                System.exit(0);
+            }
         }
     }
 

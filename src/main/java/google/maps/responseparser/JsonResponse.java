@@ -87,7 +87,7 @@ public class JsonResponse {
         }
     }
 
-    private static String getTextValue(JsonNode node) {
+    public static String getTextValue(JsonNode node) {
         if (node instanceof NullNode)
             return "null";
         if (node instanceof ContainerNode)
